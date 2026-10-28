@@ -19,9 +19,9 @@ CareerFit is a Career Readiness and Job Matching Platform designed as a college 
 - [x] Functional verification of client & server communication.
 
 ### Phase 2: Core Functional Modules
-- [ ] **Module 1**: Student Profile (Personal details, education, skills, projects, experience).
-- [ ] **Module 2**: Resume Handling (Upload, text extraction, skill detection).
-- [ ] **Module 3**: Job Management (Curated sample jobs, custom job role input/selection).
+- [x] **Module 1**: Student Profile (Personal details, college, graduation year, education, skills deduplication, projects, experience, resume text).
+- [x] **Module 2**: Job Management (Curated sample jobs, safe idempotent seed, CRUD, admin write authorization, search & filter).
+- [ ] **Module 3**: Resume Handling (Upload, text extraction, skill detection).
 - [ ] **Module 4**: Skill Matching (Transparent, deterministic match percentage algorithm).
 - [ ] **Module 5**: Skill-Gap Analysis (Matched, missing, and bonus skills categorized).
 - [ ] **Module 6**: Placement Assessments (Aptitude & technical MCQs, scoring, attempt history).
@@ -43,5 +43,6 @@ CareerFit is a Career Readiness and Job Matching Platform designed as a college 
 ---
 
 ## Current Status
-- **Current Milestone**: Phase 1 (Architecture & Foundation) in progress.
-- **Active Task**: Scaffolding backend and frontend, setting up DB connection, and verifying health check.
+- **Current Milestone**: Phase 2 (Core Functional Modules) in progress.
+- **Completed**: Phase 1 Foundation, Module 1 (Student Profile Management), Module 2 (Job Management).
+- **Active Task**: Ready for Module 3 (Resume Handling / Upload) or Module 4 (Deterministic Skill Matching Engine).

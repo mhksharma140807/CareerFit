@@ -3,6 +3,8 @@ import cors from 'cors';
 import morgan from 'morgan';
 import healthRoutes from './routes/healthRoutes.js';
 import authRoutes from './routes/authRoutes.js';
+import profileRoutes from './routes/profileRoutes.js';
+import jobRoutes from './routes/jobRoutes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
@@ -24,6 +26,8 @@ if (process.env.NODE_ENV !== 'test') {
 // Routes
 app.use('/api/health', healthRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/profile', profileRoutes);
+app.use('/api/jobs', jobRoutes);
 
 // Root fallback
 app.get('/', (req, res) => {
@@ -34,6 +38,8 @@ app.get('/', (req, res) => {
     endpoints: {
       health: '/api/health',
       auth: '/api/auth',
+      profile: '/api/profile',
+      jobs: '/api/jobs',
     },
   });
 });

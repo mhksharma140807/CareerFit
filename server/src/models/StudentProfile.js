@@ -13,6 +13,16 @@ const studentProfileSchema = new mongoose.Schema(
       trim: true,
       default: '',
     },
+    college: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    graduationYear: {
+      type: Number,
+      min: [1990, 'Graduation year must be valid'],
+      max: [2040, 'Graduation year must be valid'],
+    },
     phone: {
       type: String,
       trim: true,

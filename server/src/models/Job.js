@@ -39,9 +39,14 @@ const jobSchema = new mongoose.Schema(
       enum: ['Fresher', 'Junior', 'Mid', 'Senior'],
       default: 'Fresher',
     },
+    jobType: {
+      type: String,
+      enum: ['Full-time', 'Internship', 'Part-time', 'Contract'],
+      default: 'Full-time',
+    },
     isSample: {
       type: Boolean,
-      default: true,
+      default: false,
     },
   },
   {

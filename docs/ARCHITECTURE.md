@@ -77,22 +77,27 @@ CareerFit/
 
 ### 3.2. Student Profile Model (`StudentProfile.js`)
 - `userId`: ObjectId (ref: User), required, unique
-- `headline`: String
+- `headline`: String, trim: true
+- `college`: String, trim: true
+- `graduationYear`: Number (1990 - 2040)
+- `phone`: String, trim: true
 - `education`: Array of `{ institution, degree, fieldOfStudy, startYear, endYear, grade }`
-- `skills`: Array of String (e.g., `["React", "Node.js", "MongoDB", "SQL"]`)
+- `skills`: Array of String (deduplicated, trimmed, case-insensitive check)
 - `projects`: Array of `{ title, description, techStack: [String], link }`
 - `experience`: Array of `{ title, company, duration, description }`
 - `resume`: `{ rawText: String, filename: String, uploadedAt: Date }`
 - `createdAt`, `updatedAt`: Timestamps
 
 ### 3.3. Job Model (`Job.js`)
-- `title`: String, required (e.g., "Full Stack Developer", "Data Analyst")
-- `company`: String (or sample industry category)
+- `title`: String, required
+- `company`: String, required
+- `location`: String, default 'Remote / On-site'
 - `description`: String
-- `requiredSkills`: Array of String (e.g., `["JavaScript", "Node.js", "Express", "MongoDB"]`)
+- `requiredSkills`: Array of String, validated (at least 1 required)
 - `preferredSkills`: Array of String
-- `experienceLevel`: String (`Fresher`, `Junior`, `Mid`)
-- `isSample`: Boolean, default true
+- `experienceLevel`: String (`Fresher`, `Junior`, `Mid`, `Senior`), default `Fresher`
+- `jobType`: String (`Full-time`, `Internship`, `Part-time`, `Contract`), default `Full-time`
+- `isSample`: Boolean, default false (true for initial seed jobs)
 - `createdAt`, `updatedAt`: Timestamps
 
 ### 3.4. Assessment Model & Attempt (`Assessment.js`, `AssessmentAttempt.js`)
@@ -112,14 +117,28 @@ CareerFit/
 
 ## 4. API Endpoints Structure
 
-- `GET /api/health` — Service health & database connectivity status
-- `POST /api/auth/register` — Student account registration
+### 4.1. Health & Diagnostics
+- `GET /api/health` — System health and real-time MongoDB connection status
+
+### 4.2. Authentication (`/api/auth`)
+- `POST /api/auth/register` — Student account registration with auto profile provisioning
 - `POST /api/auth/login` — Authentication & JWT token issuance
 - `GET /api/auth/me` — Authenticated user identity (Protected)
-- `GET /api/profile` — Fetch student profile (Protected)
-- `PUT /api/profile` — Upsert student profile details (Protected)
-- `GET /api/jobs` — Retrieve curated sample job postings
-- `POST /api/jobs` — Add custom job role for matching
+
+### 4.3. Student Profile (`/api/profile`)
+- `GET /api/profile` — Fetch current authenticated student profile (Protected, isolated to `req.user._id`)
+- `PUT /api/profile` — Update student profile, display name, skills, projects, experience, and resume text (Protected)
+- `POST /api/profile/skills` — Add single skill to profile (Protected, deduplicated)
+- `DELETE /api/profile/skills/:skill` — Remove single skill from profile (Protected)
+
+### 4.4. Job Management (`/api/jobs`)
+- `GET /api/jobs` — Browse and filter jobs (Public / Student: search, experienceLevel, jobType)
+- `GET /api/jobs/:id` — View detailed job specifications (Public / Student)
+- `POST /api/jobs` — Create new job posting (Protected, Admin only)
+- `PUT /api/jobs/:id` — Update job posting details (Protected, Admin only)
+- `DELETE /api/jobs/:id` — Delete job posting (Protected, Admin only)
+
+### 4.5. Upcoming Modules
 - `POST /api/matching/evaluate` — Deterministic skill match & gap computation
 - `GET /api/assessments` — List available assessments
 - `POST /api/assessments/submit` — Submit answers and evaluate score

@@ -11,14 +11,14 @@ export default function PhaseTracker() {
   ];
 
   const phase2Items = [
-    'Module 1: Student Profile Management',
-    'Module 2: Resume Upload & Skill Extraction',
-    'Module 3: Predefined & Custom Job Management',
-    'Module 4: Skill Matching Engine (Deterministic)',
-    'Module 5: Skill Gap Categorization (Matched/Missing/Additional)',
-    'Module 6: Aptitude & Technical Assessments',
-    'Module 7: Comprehensive Readiness Report',
-    'Module 8: Student Progress Dashboard',
+    { label: 'Module 1: Student Profile Management (View, Edit, Skills, Resume text)', done: true },
+    { label: 'Module 2: Job Management (CRUD, Seed, Validation, Admin Auth)', done: true },
+    { label: 'Module 3: Resume Upload & Parsing Service', done: false },
+    { label: 'Module 4: Skill Matching Engine (Deterministic)', done: false },
+    { label: 'Module 5: Skill Gap Categorization (Matched/Missing/Bonus)', done: false },
+    { label: 'Module 6: Aptitude & Technical Assessments', done: false },
+    { label: 'Module 7: Comprehensive Readiness Report', done: false },
+    { label: 'Module 8: Student Progress Dashboard', done: false },
   ];
 
   return (
@@ -47,9 +47,15 @@ export default function PhaseTracker() {
         </div>
         <ul className="space-y-2.5">
           {phase2Items.map((item, idx) => (
-            <li key={idx} className="flex items-center gap-2.5 text-xs text-slate-600">
-              <Circle className="w-3.5 h-3.5 text-slate-300 flex-shrink-0" />
-              <span>{item}</span>
+            <li key={idx} className="flex items-center gap-2.5 text-xs text-slate-700">
+              {item.done ? (
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
+              ) : (
+                <Circle className="w-3.5 h-3.5 text-slate-300 flex-shrink-0" />
+              )}
+              <span className={item.done ? 'font-medium text-slate-900' : 'text-slate-500'}>
+                {item.label}
+              </span>
             </li>
           ))}
         </ul>

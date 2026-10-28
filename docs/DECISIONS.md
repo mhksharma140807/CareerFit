@@ -19,3 +19,8 @@
 - **Date**: Phase 1
 - **Decision**: Backend boots up cleanly even if MongoDB is not immediately connected or if the connection string is unset, signaling degraded status via `/api/health`.
 - **Rationale**: Allows developer onboarding, frontend development, and tests to run without crashing prematurely when local or cloud MongoDB instances are momentarily unreachable.
+
+## ADR-005: Student Profile Isolation & Role-Based Job Authorization
+- **Date**: Phase 2 (Modules 1 & 2)
+- **Decision**: Student profile updates are strictly bound to `req.user._id` extracted from the cryptographically verified JWT payload, with no client-controllable user parameter. Job write endpoints (`POST`, `PUT`, `DELETE /api/jobs`) are guarded by role-based authorization (`authorize('admin')`), preventing students from modifying or tampering with job requirements. Sample jobs are seeded idempotently via upsert on unique `title` and `company` fields.
+- **Rationale**: Enforces horizontal access control preventing students from altering peers' data, maintains academic integrity of job descriptions, and avoids duplicate job records on subsequent server restarts.
