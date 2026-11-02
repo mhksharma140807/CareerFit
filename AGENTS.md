@@ -26,5 +26,5 @@
 2. **Backend Validation**: Always validate on the server side; frontend validation is for UX only.
 3. **Security**: Store all secrets in `.env`. Never commit credentials or real student data. Maintain `.env.example` with placeholders.
 4. **Viva-Ready Code**: Keep code clean, modular, self-explanatory, and free of unnecessary abstractions or bloated dependencies.
-5. **Documentation Maintenance**: Always keep `docs/PROJECT_PLAN.md`, `docs/ARCHITECTURE.md`, and `docs/DECISIONS.md` updated when milestones or technical decisions change.
+5. **Documentation Maintenance**: Before planning or implementing substantial changes, consult `docs/CAREERFIT_MASTER_PLAN.md` as the central architectural reference. Always keep `docs/CAREERFIT_MASTER_PLAN.md`, `docs/PROJECT_PLAN.md`, `docs/ARCHITECTURE.md`, and `docs/DECISIONS.md` updated when milestones or technical decisions change.
 6. **Efficiency**: Keep agent responses concise, read only necessary files, and maintain the checklist in `docs/PROJECT_PLAN.md` to ensure continuity across sessions.

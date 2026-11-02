@@ -5,14 +5,40 @@ import healthRoutes from './routes/healthRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import profileRoutes from './routes/profileRoutes.js';
 import jobRoutes from './routes/jobRoutes.js';
+import matchingRoutes from './routes/matchingRoutes.js';
+import assessmentRoutes from './routes/assessmentRoutes.js';
+import reportRoutes from './routes/reportRoutes.js';
+import improvementRoutes from './routes/improvementRoutes.js';
+import savedJobRoutes from './routes/savedJobRoutes.js';
+import notificationRoutes from './routes/notificationRoutes.js';
+import progressRoutes from './routes/progressRoutes.js';
+import resumeRoutes from './routes/resumeRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
 
-// Middleware
+// CORS Configuration
+const allowedOrigins = (process.env.CLIENT_URL || 'http://localhost:5173')
+  .split(',')
+  .map((o) => o.trim().replace(/\/+$/, ''))
+  .filter(Boolean);
+
+if (process.env.NODE_ENV !== 'production' && !allowedOrigins.includes('http://localhost:5173')) {
+  allowedOrigins.push('http://localhost:5173');
+}
+
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    origin: (origin, callback) => {
+      // Allow requests with no origin (e.g. curl, health checks, server-to-server)
+      if (!origin) return callback(null, true);
+      const normalized = origin.trim().replace(/\/+$/, '');
+      if (allowedOrigins.includes(normalized)) {
+        return callback(null, true);
+      }
+      return callback(new Error(`CORS policy blocked request from unauthorized origin: ${origin}`));
+    },
     credentials: true,
   })
 );
@@ -28,6 +54,15 @@ app.use('/api/health', healthRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/jobs', jobRoutes);
+app.use('/api/matching', matchingRoutes);
+app.use('/api/assessments', assessmentRoutes);
+app.use('/api/reports', reportRoutes);
+app.use('/api/improvement-plan', improvementRoutes);
+app.use('/api/saved-jobs', savedJobRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/progress', progressRoutes);
+app.use('/api/resume', resumeRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Root fallback
 app.get('/', (req, res) => {
@@ -40,6 +75,15 @@ app.get('/', (req, res) => {
       auth: '/api/auth',
       profile: '/api/profile',
       jobs: '/api/jobs',
+      matching: '/api/matching',
+      assessments: '/api/assessments',
+      reports: '/api/reports',
+      improvementPlan: '/api/improvement-plan',
+      savedJobs: '/api/saved-jobs',
+      notifications: '/api/notifications',
+      progress: '/api/progress',
+      resume: '/api/resume',
+      admin: '/api/admin',
     },
   });
 });

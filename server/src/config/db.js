@@ -22,7 +22,7 @@ export const connectDB = async () => {
     });
 
     await mongoose.connect(uri, {
-      serverSelectionTimeoutMS: 4000,
+      serverSelectionTimeoutMS: 10000,
     });
     isConnected = true;
   } catch (error) {

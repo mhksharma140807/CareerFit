@@ -50,3 +50,23 @@ export const authorize = (...roles) => {
   };
 };
 
+export const optionalAuth = async (req, res, next) => {
+  try {
+    let token;
+    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+      token = req.headers.authorization.split(' ')[1];
+    }
+    if (token) {
+      const secret = process.env.JWT_SECRET || 'careerfit_dev_secret';
+      const decoded = jwt.verify(token, secret);
+      const user = await User.findById(decoded.id).select('-password');
+      if (user) {
+        req.user = user;
+      }
+    }
+  } catch {
+    // Ignore invalid token on optional routes
+  }
+  next();
+};
+

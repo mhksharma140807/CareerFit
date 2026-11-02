@@ -65,6 +65,22 @@ const studentProfileSchema = new mongoose.Schema(
       filename: { type: String, default: '' },
       uploadedAt: { type: Date },
     },
+    savedJobs: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Job',
+      },
+    ],
+    improvementTasks: [
+      {
+        id: { type: String },
+        title: { type: String, trim: true },
+        category: { type: String, trim: true },
+        isCompleted: { type: Boolean, default: false },
+        linkUrl: { type: String, trim: true },
+        createdAt: { type: Date, default: Date.now },
+      },
+    ],
   },
   {
     timestamps: true,

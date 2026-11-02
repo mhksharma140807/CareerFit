@@ -41,6 +41,16 @@ const assessmentSchema = new mongoose.Schema(
       trim: true,
       default: 'General',
     },
+    difficulty: {
+      type: String,
+      enum: ['Easy', 'Medium', 'Hard'],
+      default: 'Medium',
+    },
+    description: {
+      type: String,
+      trim: true,
+      default: '',
+    },
     durationMinutes: {
       type: Number,
       default: 15,

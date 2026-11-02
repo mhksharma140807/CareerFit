@@ -1,103 +1,134 @@
-import React, { useState, useEffect } from 'react';
-import { api, tokenStorage } from './services/api';
-import Navbar from './components/Navbar';
-import ProfileView from './components/ProfileView';
-import JobDirectory from './components/JobDirectory';
-import HealthStatus from './components/HealthStatus';
-import PhaseTracker from './components/PhaseTracker';
-import AuthModal from './components/AuthModal';
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import { ProtectedRoute, AdminRoute, PublicOnlyRoute } from './components/RouteGuards';
+
+// Layouts
+import PublicLayout from './layouts/PublicLayout';
+import AuthLayout from './layouts/AuthLayout';
+import StudentLayout from './layouts/StudentLayout';
+import AdminLayout from './layouts/AdminLayout';
+import AssessmentAttemptLayout from './layouts/AssessmentAttemptLayout';
+
+// Public & Auth Pages
+import HomePage from './pages/public/HomePage';
+import JobDirectoryPage from './pages/public/JobDirectoryPage';
+import JobDetailsPage from './pages/public/JobDetailsPage';
+import HelpPage from './pages/public/HelpPage';
+import UnauthorizedPage from './pages/public/UnauthorizedPage';
+import NotFoundPage from './pages/public/NotFoundPage';
+import LoginPage from './pages/auth/LoginPage';
+import RegisterPage from './pages/auth/RegisterPage';
+
+// Student Pages
+import DashboardPage from './pages/student/DashboardPage';
+import ProfilePage from './pages/student/ProfilePage';
+import ResumeAnalyzerPage from './pages/student/ResumeAnalyzerPage';
+import JobMatchPage from './pages/student/JobMatchPage';
+import AssessmentCenterPage from './pages/student/AssessmentCenterPage';
+import TakeAssessmentPage from './pages/student/TakeAssessmentPage';
+import AssessmentResultPage from './pages/student/AssessmentResultPage';
+import ReadinessReportPage from './pages/student/ReadinessReportPage';
+import ImprovementPlanPage from './pages/student/ImprovementPlanPage';
+import ProgressPage from './pages/student/ProgressPage';
+import SavedJobsPage from './pages/student/SavedJobsPage';
+import NotificationsPage from './pages/student/NotificationsPage';
+import SettingsPage from './pages/student/SettingsPage';
+
+// Admin Pages
+import AdminDashboardPage from './pages/admin/AdminDashboardPage';
+import AdminJobsPage from './pages/admin/AdminJobsPage';
+import AdminAssessmentsPage from './pages/admin/AdminAssessmentsPage';
+import AdminUsersPage from './pages/admin/AdminUsersPage';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('profile');
-  const [user, setUser] = useState(null);
-  const [isAuthOpen, setIsAuthOpen] = useState(false);
-  const [initialChecking, setInitialChecking] = useState(true);
-
-  // Check persisted auth session on initial load
-  useEffect(() => {
-    const checkAuth = async () => {
-      const token = tokenStorage.get();
-      if (token) {
-        try {
-          const res = await api.getMe();
-          if (res.success && res.user) {
-            setUser(res.user);
-          } else {
-            tokenStorage.clear();
-            setUser(null);
-          }
-        } catch {
-          tokenStorage.clear();
-          setUser(null);
-        }
-      }
-      setInitialChecking(false);
-    };
-
-    checkAuth();
-  }, []);
-
-  const handleAuthSuccess = (userData) => {
-    setUser(userData);
-  };
-
-  const handleLogout = () => {
-    tokenStorage.clear();
-    setUser(null);
-  };
-
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-800">
-      <Navbar
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        user={user}
-        onOpenAuth={() => setIsAuthOpen(true)}
-        onLogout={handleLogout}
-      />
+    <BrowserRouter>
+      <AuthProvider>
+        <Routes>
+          {/* Public & Informational Routes */}
+          <Route element={<PublicLayout />}>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/jobs" element={<JobDirectoryPage />} />
+            <Route path="/jobs/:id" element={<JobDetailsPage />} />
+            <Route path="/help" element={<HelpPage />} />
+            <Route path="/unauthorized" element={<UnauthorizedPage />} />
+          </Route>
 
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-8">
-        {initialChecking ? (
-          <div className="text-center py-16 text-xs text-slate-500">
-            Checking session...
-          </div>
-        ) : (
-          <>
-            {activeTab === 'profile' && (
-              <ProfileView
-                user={user}
-                onRequireAuth={() => setIsAuthOpen(true)}
-              />
-            )}
+          {/* Authentication Routes (Public Only) */}
+          <Route element={<AuthLayout />}>
+            <Route
+              path="/login"
+              element={
+                <PublicOnlyRoute>
+                  <LoginPage />
+                </PublicOnlyRoute>
+              }
+            />
+            <Route
+              path="/register"
+              element={
+                <PublicOnlyRoute>
+                  <RegisterPage />
+                </PublicOnlyRoute>
+              }
+            />
+          </Route>
 
-            {activeTab === 'jobs' && <JobDirectory />}
+          {/* Student Protected Routes (Standard Shell with Sidebar & Genuine Notifications) */}
+          <Route
+            element={
+              <ProtectedRoute>
+                <StudentLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/resume" element={<ResumeAnalyzerPage />} />
+            <Route path="/jobs/:id/match" element={<JobMatchPage />} />
+            <Route path="/assessments" element={<AssessmentCenterPage />} />
+            <Route path="/assessments/attempts/:attemptId" element={<AssessmentResultPage />} />
+            <Route path="/reports/:reportId" element={<ReadinessReportPage />} />
+            <Route path="/improvement-plan" element={<ImprovementPlanPage />} />
+            <Route path="/progress" element={<ProgressPage />} />
+            <Route path="/saved-jobs" element={<SavedJobsPage />} />
+            <Route path="/notifications" element={<NotificationsPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
+          </Route>
 
-            {activeTab === 'health' && (
-              <div className="space-y-6">
-                <div className="mb-2">
-                  <h2 className="text-2xl font-bold text-slate-900">Platform Foundation & Health</h2>
-                  <p className="text-xs text-slate-500 mt-1">
-                    System health verification, database connectivity, and milestone roadmap.
-                  </p>
-                </div>
-                <HealthStatus />
-                <PhaseTracker />
-              </div>
-            )}
-          </>
-        )}
-      </main>
+          {/* Distraction-Free Assessment Attempt Route */}
+          <Route
+            element={
+              <ProtectedRoute>
+                <AssessmentAttemptLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route path="/assessments/:id/attempt" element={<TakeAssessmentPage />} />
+          </Route>
 
-      {/* Auth Modal */}
-      <AuthModal
-        isOpen={isAuthOpen}
-        onClose={() => setIsAuthOpen(false)}
-        onAuthSuccess={handleAuthSuccess}
-      />
+          {/* Admin Protected Routes */}
+          <Route
+            path="/admin"
+            element={
+              <AdminRoute>
+                <AdminLayout />
+              </AdminRoute>
+            }
+          >
+            <Route index element={<AdminDashboardPage />} />
+            <Route path="jobs" element={<AdminJobsPage />} />
+            <Route path="assessments" element={<AdminAssessmentsPage />} />
+            <Route path="users" element={<AdminUsersPage />} />
+          </Route>
 
-      <footer className="border-t border-slate-200 bg-white py-4 text-center text-xs text-slate-500">
-        CareerFit &bull; Career Readiness and Job Matching Platform &bull; Phase 2 Active
-      </footer>
-    </div>
+          {/* 404 Catch-All Fallback */}
+          <Route element={<PublicLayout />}>
+            <Route path="*" element={<NotFoundPage />} />
+          </Route>
+        </Routes>
+      </AuthProvider>
+    </BrowserRouter>
   );
 }

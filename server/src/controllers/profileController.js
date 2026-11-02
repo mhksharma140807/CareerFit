@@ -1,5 +1,6 @@
 import { StudentProfile } from '../models/StudentProfile.js';
 import { User } from '../models/User.js';
+import { triggerNotification } from '../utils/notificationHelper.js';
 
 // Helper to deduplicate array of strings case-insensitively while preserving original casing
 const deduplicateSkills = (skillsArray) => {
@@ -153,6 +154,25 @@ export const updateProfile = async (req, res, next) => {
       { $set: updates },
       { new: true, upsert: true, runValidators: true }
     ).populate('userId', 'name email role');
+
+    // Genuine Profile Completion Trigger (Decision 2)
+    if (
+      updatedProfile.college &&
+      updatedProfile.graduationYear &&
+      updatedProfile.skills &&
+      updatedProfile.skills.length >= 3 &&
+      updatedProfile.projects &&
+      updatedProfile.projects.length >= 1
+    ) {
+      await triggerNotification({
+        userId: req.user._id,
+        title: 'Profile Milestone Reached!',
+        message: 'Your profile is placement-ready with college details, verified skills, and academic projects.',
+        type: 'profile_completion',
+        link: '/profile',
+        eventFingerprint: `profile_milestone_${req.user._id}`,
+      });
+    }
 
     res.status(200).json({
       success: true,

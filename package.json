@@ -4,6 +4,8 @@
   "description": "Career Readiness and Job Matching Platform",
   "private": true,
   "scripts": {
+    "build": "npm run build --prefix client",
+    "start": "npm start --prefix server",
     "dev:server": "npm run dev --prefix server",
     "dev:client": "npm run dev --prefix client",
     "dev": "concurrently -n \"SERVER,CLIENT\" -c \"blue,green\" \"npm run dev:server\" \"npm run dev:client\"",
