@@ -1,4 +1,12 @@
 import mongoose from 'mongoose';
+import dns from 'dns';
+
+// Configure reliable DNS servers to avoid querySrv ECONNREFUSED / ETIMEOUT on MongoDB Atlas (SRV records)
+try {
+  dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1']);
+} catch (dnsErr) {
+  console.warn('DNS server configuration warning:', dnsErr.message);
+}
 
 let isConnected = false;
 

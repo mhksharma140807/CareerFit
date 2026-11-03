@@ -202,7 +202,8 @@ Verify the deployed application by walking through the following checks:
 - **Cause**: `CLIENT_URL` on Render does not match your Vercel URL, or has a trailing slash.
 - **Fix**: The backend automatically normalizes trailing slashes, but ensure the domain name in Render matches the exact Vercel deployment URL (e.g., `https://careerfit-xxx.vercel.app`).
 
-### 3. MongoDB Connection Timeout
-- **Symptom**: Health check reports `database: disconnected`.
-- **Fix**: Check that your MongoDB Atlas IP Whitelist has `0.0.0.0/0` active. Confirm database username and password in Render `MONGODB_URI` environment variable are correct.
+### 3. MongoDB Connection Timeout or SRV Lookup Failure (querySrv ECONNREFUSED)
+- **Symptom**: `querySrv ECONNREFUSED _mongodb._tcp...` or health check reports `database: disconnected`.
+- **Cause**: Some ISPs, university firewalls, or cloud container networks fail to resolve DNS SRV records for `mongodb+srv://`.
+- **Fix**: The backend automatically sets public DNS servers (`dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1'])`) in `server/src/config/db.js` before connecting to MongoDB Atlas. Also verify that MongoDB Atlas Network Access has `0.0.0.0/0` (Allow from Anywhere) active and credentials are correct.
 
