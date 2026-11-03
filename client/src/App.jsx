@@ -19,6 +19,7 @@ import UnauthorizedPage from './pages/public/UnauthorizedPage';
 import NotFoundPage from './pages/public/NotFoundPage';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
+import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
 
 // Student Pages
 import DashboardPage from './pages/student/DashboardPage';
@@ -70,6 +71,14 @@ export default function App() {
               element={
                 <PublicOnlyRoute>
                   <RegisterPage />
+                </PublicOnlyRoute>
+              }
+            />
+            <Route
+              path="/forgot-password"
+              element={
+                <PublicOnlyRoute>
+                  <ForgotPasswordPage />
                 </PublicOnlyRoute>
               }
             />

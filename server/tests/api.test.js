@@ -46,7 +46,7 @@ test('CareerFit Phase 2 API Suite', async (t) => {
       body: JSON.stringify({
         name: 'Rahul Sharma',
         email: `rahul_${uniqueSuffix}@example.com`,
-        password: 'password123',
+        password: 'Password@123',
       }),
     });
     const data1 = await res1.json();
@@ -62,7 +62,7 @@ test('CareerFit Phase 2 API Suite', async (t) => {
       body: JSON.stringify({
         name: 'Priya Patel',
         email: `priya_${uniqueSuffix}@example.com`,
-        password: 'password123',
+        password: 'Password@123',
       }),
     });
     const data2 = await res2.json();

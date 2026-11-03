@@ -244,7 +244,7 @@ The platform comprises **25 routes** grouped into four logical categories: Publi
 - **Purpose & Primary User**: Student onboarding page for creating an account and auto-provisioning a blank student profile.
 - **Main Information & Actions**:
   - Clean card form: Full Name, College Email Address, Password, Password Confirmation.
-  - Interactive password requirements indicator (minimum 6 characters, alphanumeric).
+  - Interactive password requirements indicator enforcing 5 complexity rules (minimum 8 characters, uppercase letter, lowercase letter, number, and special symbol).
   - Submit button with loading state.
   - Link to `/login` for existing users.
 - **Dependencies on Other Pages & Backend**:
@@ -279,6 +279,24 @@ The platform comprises **25 routes** grouped into four logical categories: Publi
   - *Loading*: Submit button loading spinner.
   - *Error*: "Invalid email or password" banner.
   - *Success*: Immediate transition to destination dashboard.
+
+#### 5b. Forgot / Reset Password — `/forgot-password`
+- **Purpose & Primary User**: Self-service account recovery page allowing students and administrators to reset a forgotten password securely using human verification (CAPTCHA) and strong password rules without requiring external paid email/SMS services (OTP planned for future iteration).
+- **Main Information & Actions**:
+  - Registered Email Address input with strict RFC email validation.
+  - Visual anti-bot SVG CAPTCHA puzzle (6-character distorted challenge with noise lines and rotation) and refresh button.
+  - New Password input with real-time 5-criteria Password Strength Indicator (min 8 chars, uppercase, lowercase, number, special symbol).
+  - Confirm Password input.
+  - Primary "Verify CAPTCHA & Reset Password" button with loading spinner.
+  - "Back to Sign In" footer link.
+- **Dependencies on Other Pages & Backend**:
+  - `GET /api/auth/captcha` — Generates signed CAPTCHA token and SVG challenge.
+  - `POST /api/auth/reset-password` — Validates CAPTCHA cryptographic token, email, and strong password rules, then updates password hash.
+- **Authentication & Authorization**: Public (guests only). Authenticated users are redirected to `/dashboard`.
+- **Expected UI States**:
+  - *Loading*: Spinner while loading CAPTCHA challenge or submitting reset request.
+  - *Error*: Inline alert if CAPTCHA solution is incorrect/expired, email is unregistered, or password fails complexity rules.
+  - *Success*: Green check banner confirming password reset and a direct "Proceed to Sign In" CTA.
 
 #### 6. Help and FAQ — `/help`
 - **Purpose & Primary User**: Comprehensive reference guide and FAQ for students, placement officers, and viva examiners explaining the platform's methodology, algorithmic fairness, and troubleshooting steps.

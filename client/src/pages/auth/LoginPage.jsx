@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { LogIn, AlertCircle, ArrowRight, Loader2, Lock, Mail } from 'lucide-react';
+import { validateEmail } from '../../utils/validators';
+import { LogIn, AlertCircle, ArrowRight, Loader2, Lock, Mail, Eye, EyeOff } from 'lucide-react';
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -10,6 +11,7 @@ export default function LoginPage() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -20,10 +22,17 @@ export default function LoginPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    const emailCheck = validateEmail(email);
+    if (!emailCheck.isValid) {
+      setError(emailCheck.error);
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const res = await login(email, password);
+      const res = await login(email.trim(), password);
       if (res.success) {
         if (res.user?.role === 'admin' && !searchParams.get('redirect')) {
           navigate('/admin');
@@ -73,17 +82,33 @@ export default function LoginPage() {
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-slate-700 mb-1">Password</label>
+          <div className="flex items-center justify-between mb-1">
+            <label className="text-xs font-semibold text-slate-700">Password</label>
+            <Link
+              to="/forgot-password"
+              className="text-[11px] font-semibold text-emerald-600 hover:text-emerald-700 transition"
+            >
+              Forgot password?
+            </Link>
+          </div>
           <div className="relative">
             <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
             <input
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               required
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50/50"
+              className="w-full pl-9 pr-9 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50/50"
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600"
+              title={showPassword ? 'Hide password' : 'Show password'}
+            >
+              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
           </div>
         </div>
 

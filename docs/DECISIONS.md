@@ -126,3 +126,12 @@
   3. *Database*: MongoDB Atlas M0 Sandbox Cluster (Free 512 MB forever, no credit card required, 10s server selection timeout for cold starts).
   4. *Security*: Strict origin-based CORS on Render accepting only authorized frontend origins (e.g., `CLIENT_URL` pointing to Vercel and local dev), zero secrets in source control.
 - **Rationale**: Meets the mandatory ₹0 budget constraint for college project demonstrations while delivering a resilient, publicly accessible live deployment with persistent cloud database storage.
+
+## ADR-015: Strong Password Enforcement & Self-Service CAPTCHA Password Reset
+- **Date / Milestone**: Phase 2 / Security Hardening
+- **Status**: Implemented & verified
+- **Decision**: Enforce strict server-side and client-side password and email rules, and implement a self-contained, ₹0 budget visual CAPTCHA recovery workflow:
+  1. *Strong Password Rules*: Minimum 8 characters, at least 1 uppercase letter, 1 lowercase letter, 1 number, and 1 special symbol. Enforced on user registration, password change, and password reset. Real-time visual 5-criteria checklist on frontend.
+  2. *Strict Email Validation*: RFC 5322 regex validation requiring valid domain structure and at least 2-character TLDs.
+  3. *Self-Contained SVG CAPTCHA Recovery*: Generates distorted 6-character SVG visual challenges with anti-bot noise lines and signed stateless cryptographic JWT tokens (`sha256` solution hash, 10-minute expiry). Bypasses need for external commercial services (e.g. reCAPTCHA) and avoids paid SMS/email infrastructure until OTP verification is added in a future phase.
+- **Rationale**: Elevates application security to production placement standards, protects student accounts against brute-force attacks, and maintains strict adherence to the ₹0 budget and offline demo capabilities.

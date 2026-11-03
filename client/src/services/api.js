@@ -71,6 +71,20 @@ export const api = {
     return await res.json();
   },
 
+  async getCaptcha() {
+    const res = await fetch(`${API_BASE}/auth/captcha`);
+    return await res.json();
+  },
+
+  async resetPassword({ email, captchaToken, captchaAnswer, newPassword }) {
+    const res = await fetch(`${API_BASE}/auth/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, captchaToken, captchaAnswer, newPassword }),
+    });
+    return await res.json();
+  },
+
   // Student Profile
   async getProfile() {
     const res = await fetch(`${API_BASE}/profile`, {

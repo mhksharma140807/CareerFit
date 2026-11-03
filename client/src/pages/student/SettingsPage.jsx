@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../services/api';
+import PasswordStrengthIndicator from '../../components/PasswordStrengthIndicator';
+import { evaluatePasswordStrength } from '../../utils/validators';
 import {
   Settings,
   Lock,
@@ -31,8 +33,9 @@ export default function SettingsPage() {
     setError('');
     setSuccess('');
 
-    if (newPassword.length < 6) {
-      setError('New password must be at least 6 characters long.');
+    const passwordEval = evaluatePasswordStrength(newPassword);
+    if (!passwordEval.allMet) {
+      setError('New password must fulfill all 5 strong password criteria.');
       return;
     }
 
@@ -50,7 +53,7 @@ export default function SettingsPage() {
         setNewPassword('');
         setConfirmPassword('');
       } else {
-        setError(res.error || 'Failed to update password');
+        setError(res.message || res.error || 'Failed to update password');
       }
     } catch (err) {
       setError(err.message || 'Error updating password');
@@ -141,15 +144,17 @@ export default function SettingsPage() {
 
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1">
-              New Password (min 6 characters) *
+              New Password (Strong 8+ characters) *
             </label>
             <input
               type="password"
               required
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
+              placeholder="Minimum 8 characters with upper, lower, number, symbol"
               className="w-full text-xs p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
             />
+            <PasswordStrengthIndicator password={newPassword} />
           </div>
 
           <div>
