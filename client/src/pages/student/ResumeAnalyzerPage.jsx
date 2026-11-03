@@ -54,6 +54,7 @@ export default function ResumeAnalyzerPage() {
     try {
       const formData = new FormData();
       formData.append('resume', file);
+      formData.append('resumeFile', file);
       const res = await api.uploadResumeFile(formData);
 
       if (res.success) {
