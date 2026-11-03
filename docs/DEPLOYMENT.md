@@ -207,3 +207,44 @@ Verify the deployed application by walking through the following checks:
 - **Cause**: Some ISPs, university firewalls, or cloud container networks fail to resolve DNS SRV records for `mongodb+srv://`.
 - **Fix**: The backend automatically sets public DNS servers (`dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1'])`) in `server/src/config/db.js` before connecting to MongoDB Atlas. Also verify that MongoDB Atlas Network Access has `0.0.0.0/0` (Allow from Anywhere) active and credentials are correct.
 
+---
+
+## Step 7: Administrator Account Setup & Secure Operations
+
+CareerFit features a dedicated administrative console for managing job descriptions, reviewing placement questions, and monitoring student readiness metrics. Administrative accounts cannot be registered via public registration.
+
+### 1. Configure Admin Environment Variables
+In your local `.env` or Render environment settings:
+```env
+ADMIN_EMAIL=admin@careerfit.local
+ADMIN_PASSWORD="YourStrongPassword123!#"
+```
+*(Always quote passwords containing special characters like `#`, `!`, or `$` to prevent shell/dotenv parsing errors).*
+
+### 2. Provision Initial Admin Account
+Run the idempotent seed script from the project root:
+```bash
+npm run seed:admin
+```
+- If the admin user does not exist, it hashes the password with bcrypt and creates the account.
+- If the admin already exists, it preserves existing credentials without duplicate insertion.
+- If the email belongs to an existing student, it refuses to overwrite or auto-promote.
+
+### 3. Log In & Open the Admin Dashboard
+1. Open the login page: `http://localhost:5173/login` (or `https://<your-vercel-app>.vercel.app/login`).
+2. Enter your configured `ADMIN_EMAIL` and `ADMIN_PASSWORD`.
+3. Upon successful authentication, CareerFit automatically detects the `admin` role and navigates directly to the **Admin Overview** (`/admin`).
+4. Accessible management sections:
+   - **Overview Metrics**: `/admin` (student count, job count, assessment volume, readiness averages)
+   - **Job Management**: `/admin/jobs` (CRUD job listings, requirement tags)
+   - **Assessments & Question Bank**: `/admin/assessments` (add/edit questions, test difficulty)
+   - **Student Directory**: `/admin/users` (view student skills, toggle roles, remove records)
+
+### 4. Production Security Recommendations
+- Set `ADMIN_EMAIL` and `ADMIN_PASSWORD` in your Render Environment Variables dashboard before deploying.
+- After the initial deployment boots and provisions the admin user in MongoDB Atlas, you may safely remove `ADMIN_PASSWORD` from Render environment variables to ensure zero plain-text retention.
+
+### 5. Changing the Admin Password Safely
+- **While Logged In**: Navigate to `/settings` and use the change-password form with your current password and a new 8+ character strong password.
+- **If Forgotten**: Navigate to `/forgot-password`, solve the human verification CAPTCHA, enter your registered admin email, and set a new password meeting the 5 complexity rules.
+

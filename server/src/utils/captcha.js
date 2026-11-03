@@ -161,3 +161,4 @@ export const verifyCaptcha = (captchaToken, userAnswer) => {
     return { isValid: false, error: 'Invalid or corrupted CAPTCHA token.' };
   }
 };
+

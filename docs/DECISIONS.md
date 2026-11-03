@@ -135,3 +135,13 @@
   2. *Strict Email Validation*: RFC 5322 regex validation requiring valid domain structure and at least 2-character TLDs.
   3. *Self-Contained SVG CAPTCHA Recovery*: Generates distorted 6-character SVG visual challenges with anti-bot noise lines and signed stateless cryptographic JWT tokens (`sha256` solution hash, 10-minute expiry). Bypasses need for external commercial services (e.g. reCAPTCHA) and avoids paid SMS/email infrastructure until OTP verification is added in a future phase.
 - **Rationale**: Elevates application security to production placement standards, protects student accounts against brute-force attacks, and maintains strict adherence to the ₹0 budget and offline demo capabilities.
+
+## ADR-016: Dedicated Administrator Bootstrapping & Privilege Escalation Prevention
+- **Date / Milestone**: Phase 2 / Admin Authentication
+- **Status**: Implemented & verified
+- **Decision**: Restrict administrator account creation strictly to backend administrative seed scripts (`npm run seed:admin`) and block public registration privilege escalation:
+  1. *Backend Bootstrapping*: The initial admin account is provisioned via `seedInitialAdmin()` using `ADMIN_EMAIL` and `ADMIN_PASSWORD`. Never prints or logs the plain-text password. Automatically hashes with bcrypt before persistence.
+  2. *Idempotency & Integrity*: Re-running the seed script preserves existing admin credentials without duplicate insertions. If the configured email is registered as a student, the script terminates with an error and refuses to promote or overwrite.
+  3. *Public Registration Hardening*: `POST /api/auth/register` rejects any request body containing `role !== 'student'` with `403 Forbidden` and strictly forces `role: 'student'` on creation.
+  4. *Role-Based Authorization (RBAC)*: Every admin endpoint (`/api/admin/*`, `POST/PUT/DELETE /api/jobs`) is guarded by `protect, authorize('admin')`. Unauthorized student tokens are rejected with `403 Forbidden`.
+- **Rationale**: Eliminates the risk of unauthorized privilege escalation on public endpoints, ensures reliable faculty/evaluator access during live viva demonstrations, and guarantees clean separation between student and administrative privileges.

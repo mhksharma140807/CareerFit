@@ -77,3 +77,4 @@ test('CAPTCHA Engine — Generation and Cryptographic Verification', async (t) =
     assert.equal(result.isValid, false);
   });
 });
+

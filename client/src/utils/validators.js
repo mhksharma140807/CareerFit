@@ -100,3 +100,4 @@ export const evaluatePasswordStrength = (password = '') => {
     percentage,
   };
 };
+

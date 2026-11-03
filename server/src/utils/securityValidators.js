@@ -120,3 +120,4 @@ export const validatePassword = (password) => {
     errors,
   };
 };
+

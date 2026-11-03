@@ -57,10 +57,19 @@ export const register = async (req, res, next) => {
       });
     }
 
+    // Enforce that public registration is strictly for student accounts
+    if (req.body.role && req.body.role !== 'student') {
+      return res.status(403).json({
+        success: false,
+        message: 'Public registration is restricted to student accounts. Administrative accounts cannot be registered publicly.',
+      });
+    }
+
     const user = await User.create({
       name: name.trim(),
       email: normalizedEmail,
       password,
+      role: 'student',
     });
 
     // Create an associated empty profile for student
