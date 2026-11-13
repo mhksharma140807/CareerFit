@@ -31,9 +31,9 @@
 - **Rationale**: Enforces horizontal access control preventing students from altering peers' data, maintains academic integrity of job descriptions, and avoids duplicate job records on subsequent server restarts.
 
 ## ADR-006: Local Resume Parsing Engine
-- **Date / Milestone**: Phase 2 (Module 3)
-- **Status**: Under Discussion (Shortlisted: `pdf-parse` + manual fallback)
-- **Decision**: Process uploaded PDF/TXT resumes locally on the backend using `multer` and `pdf-parse`, extracting plain text and running algorithmic keyword matching against verified skill dictionaries, with an immediate manual text paste fallback.
+- **Date / Milestone**: Phase 2 (Module 3) & Phase 3
+- **Status**: Implemented & verified (via `pdf-parse` v2 + `mammoth` + `skillTaxonomy`)
+- **Decision**: Process uploaded PDF/DOCX/TXT resumes locally on the backend using `multer`, `pdf-parse` (stream decompression), and `mammoth` (DOCX parsing), extracting clean text and running algorithmic keyword matching against verified categorized skill dictionaries and alias maps, with an immediate manual text paste fallback.
 - **Rationale**: Preserves the strict ₹0 budget and avoids student PII transmission to third-party commercial cloud parsers. Ensures 100% offline functionality during viva demonstrations.
 
 ## ADR-007: Server-Side Assessment Answer Verification
@@ -145,3 +145,22 @@
   3. *Public Registration Hardening*: `POST /api/auth/register` rejects any request body containing `role !== 'student'` with `403 Forbidden` and strictly forces `role: 'student'` on creation.
   4. *Role-Based Authorization (RBAC)*: Every admin endpoint (`/api/admin/*`, `POST/PUT/DELETE /api/jobs`) is guarded by `protect, authorize('admin')`. Unauthorized student tokens are rejected with `403 Forbidden`.
 - **Rationale**: Eliminates the risk of unauthorized privilege escalation on public endpoints, ensures reliable faculty/evaluator access during live viva demonstrations, and guarantees clean separation between student and administrative privileges.
+
+## ADR-017: Hybrid Resume Intelligence & Gemini Flash Integration with Deterministic Fallback
+- **Date / Milestone**: Phase 3 / AI Capabilities & Resume Intelligence
+- **Status**: Implemented & verified
+- **Decision**: Architect resume skill extraction and recommendations as a dual-layer hybrid system:
+  1. *Foundation (Deterministic & Local)*: `pdf-parse` decompressing FlateDecode PDF byte streams, `mammoth` parsing DOCX XML, and `skillTaxonomy` matching 150+ CSE skills across 8 categories with alias normalization and boundary-safe regex for punctuation terms (`C++`, `C#`, `.NET`, `Node.js`). 100% offline and autonomous.
+  2. *Enrichment (Gemini Flash)*: When `GEMINI_API_KEY` is provided, the backend invokes Google's free-tier Gemini Flash (`gemini-3.5-flash-lite` via REST) for structured project extraction and personalized milestone advice.
+  3. *Privacy & PII Stripping*: All student PII (emails, phone numbers, LinkedIn/GitHub profile URLs) is stripped before external transmission.
+  4. *Autonomous Fallback*: If Gemini times out, returns HTTP 429 (rate-limited), or is unconfigured, the system automatically falls back to deterministic extraction without throwing user-facing errors. Every extraction reports its origin (`extractionSource: 'ai' | 'deterministic'`).
+- **Rationale**: Retains deterministic viva-explainability and ₹0 operational cost while providing high-grade AI features when connected.
+
+## ADR-018: Multi-Dimensional Assessment Analytics & Readiness Engine
+- **Date / Milestone**: Phase 3 / Performance Analytics
+- **Status**: Implemented & verified
+- **Decision**: Upgrade assessment evaluation and readiness report generation to provide multi-dimensional placement readiness:
+  1. *Aptitude vs. Technical Separation*: Categorizes attempts into Quantitative/Logical Aptitude and Technical/Core CS proficiency rather than an unweighted flat average.
+  2. *Weak-Topic Identification*: Mines question-level errors and tags to identify specific conceptual weaknesses (e.g., Recursion, DBMS Normalization).
+  3. *Readiness Formula Preservation*: Strictly preserves the documented 60% skill match + 40% assessment readiness formula (ADR-012) and 85% mandatory / 15% preferred job matching formula (ADR-002), supplemented with justified partial matches (e.g. JavaScript for TypeScript).
+- **Rationale**: Delivers authentic academic value and placement preparation diagnostics to students while strictly complying with baseline mathematical formulas agreed in project planning.

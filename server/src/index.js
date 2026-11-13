@@ -7,6 +7,7 @@ const __dirname = path.dirname(__filename);
 
 dotenv.config();
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 import app from './app.js';
 import { connectDB, getDbStatus } from './config/db.js';

@@ -1,18 +1,39 @@
 import { StudentProfile } from '../models/StudentProfile.js';
+import { extractTextFromDocument, segmentResumeSections } from '../utils/documentParser.js';
+import {
+  extractSkillsDeterministically,
+  canonicalizeSkill,
+  getSkillCategory,
+  SKILL_DEFINITIONS,
+} from '../utils/skillTaxonomy.js';
+import { extractSkillsWithGemini, isGeminiConfigured } from '../services/aiService.js';
 
-// Curated technical skill dictionary for deterministic keyword detection
-export const SKILL_DICTIONARY = [
-  'JavaScript', 'TypeScript', 'React', 'React.js', 'Next.js', 'Vue', 'Angular',
-  'Node.js', 'Node', 'Express', 'Express.js', 'MongoDB', 'SQL', 'PostgreSQL', 'MySQL',
-  'Python', 'Java', 'C++', 'C#', '.NET', 'PHP', 'Ruby', 'Go', 'Rust',
-  'HTML5', 'HTML', 'CSS3', 'CSS', 'Tailwind CSS', 'Tailwind', 'Bootstrap', 'Sass',
-  'Redux', 'Zustand', 'GraphQL', 'REST APIs', 'REST', 'WebSockets',
-  'Docker', 'Kubernetes', 'Linux', 'Git', 'GitHub', 'CI/CD', 'GitHub Actions',
-  'AWS', 'Azure', 'Google Cloud', 'GCP', 'Firebase', 'Vercel', 'Render',
-  'Redis', 'Microservices', 'OOP', 'Data Structures', 'Algorithms', 'DBMS', 'Operating Systems',
-  'Jest', 'Mocha', 'Postman', 'Figma', 'Pandas', 'NumPy', 'Machine Learning', 'Data Analysis',
-];
+// Export legacy array for any backwards-compatibility references
+export const SKILL_DICTIONARY = SKILL_DEFINITIONS.map((s) => s.canonical);
 
+/**
+ * Hybrid extraction pipeline: Tries Gemini Flash first, gracefully falls back to deterministic taxonomy
+ */
+const runHybridSkillExtraction = async (cleanedText, sections) => {
+  // 1. If Gemini is configured, attempt AI extraction
+  if (isGeminiConfigured()) {
+    try {
+      const aiResult = await extractSkillsWithGemini(cleanedText, sections);
+      if (aiResult && Array.isArray(aiResult.skills) && aiResult.skills.length > 0) {
+        return aiResult;
+      }
+    } catch (aiErr) {
+      console.warn('[Resume Extraction] Gemini attempt failed, using deterministic fallback:', aiErr.message);
+    }
+  }
+
+  // 2. Deterministic rule-based extraction (autonomous fallback)
+  return extractSkillsDeterministically(cleanedText, sections);
+};
+
+/**
+ * Handles plain text skill extraction (pasted resume or text entry)
+ */
 export const extractSkillsFromText = async (req, res, next) => {
   try {
     const { text = '', saveToProfile = false } = req.body;
@@ -21,19 +42,9 @@ export const extractSkillsFromText = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Resume text is required for analysis.' });
     }
 
-    const lowerText = text.toLowerCase();
-    const detectedSet = new Set();
-
-    SKILL_DICTIONARY.forEach((skill) => {
-      // Word boundary check
-      const escaped = skill.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
-      const regex = new RegExp(`(?:\\b|[^a-zA-Z0-9])${escaped}(?:\\b|[^a-zA-Z0-9])`, 'i');
-      if (regex.test(lowerText)) {
-        detectedSet.add(skill);
-      }
-    });
-
-    const detectedSkills = Array.from(detectedSet);
+    const sections = segmentResumeSections(text);
+    const extraction = await runHybridSkillExtraction(text, sections);
+    const detectedSkills = extraction.skills;
 
     let alreadyInProfile = [];
     let newlyDetected = detectedSkills;
@@ -41,11 +52,14 @@ export const extractSkillsFromText = async (req, res, next) => {
     if (req.user) {
       const profile = await StudentProfile.findOne({ userId: req.user._id });
       if (profile) {
-        const studentLowerSkills = new Set((profile.skills || []).map((s) => s.toLowerCase()));
-        alreadyInProfile = detectedSkills.filter((s) => studentLowerSkills.has(s.toLowerCase()));
-        newlyDetected = detectedSkills.filter((s) => !studentLowerSkills.has(s.toLowerCase()));
+        const studentCanonicalSkills = new Set((profile.skills || []).map(canonicalizeSkill));
+        alreadyInProfile = detectedSkills.filter((s) => studentCanonicalSkills.has(s));
+        newlyDetected = detectedSkills.filter((s) => !studentCanonicalSkills.has(s));
 
         if (saveToProfile) {
+          // Merge unique skills into profile
+          const mergedSet = new Set([...(profile.skills || []), ...detectedSkills]);
+          profile.skills = Array.from(mergedSet);
           profile.resume = {
             rawText: text,
             filename: req.body.filename || 'manual_entry.txt',
@@ -58,7 +72,7 @@ export const extractSkillsFromText = async (req, res, next) => {
 
     res.json({
       success: true,
-      message: `Detected ${detectedSkills.length} technical skills from resume text.`,
+      message: `Detected ${detectedSkills.length} technical skills (${extraction.extractionSource === 'ai' ? 'AI-analyzed' : 'Deterministic'}).`,
       extractedSkills: detectedSkills,
       data: {
         totalDetected: detectedSkills.length,
@@ -66,6 +80,9 @@ export const extractSkillsFromText = async (req, res, next) => {
         newlyDetected,
         allDetected: detectedSkills,
         extractedSkills: detectedSkills,
+        categorized: extraction.categorized || {},
+        extractionSource: extraction.extractionSource,
+        modelUsed: extraction.modelUsed || null,
         previewText: text.slice(0, 500) + (text.length > 500 ? '...' : ''),
       },
     });
@@ -74,46 +91,49 @@ export const extractSkillsFromText = async (req, res, next) => {
   }
 };
 
+/**
+ * Handles resume file upload (PDF, DOCX, TXT) with stream decompression & hybrid skill extraction
+ */
 export const handleFileUpload = async (req, res, next) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({ success: false, message: 'No file was uploaded.' });
+    const file = req.file || (req.files && req.files[0]);
+
+    if (!file) {
+      return res.status(400).json({
+        success: false,
+        message: 'No file was uploaded. Please upload a PDF (.pdf), Word document (.docx), or text (.txt) file.',
+      });
     }
 
-    let extractedText = '';
-    const filename = req.file.originalname || 'uploaded_resume';
+    const filename = file.originalname || 'uploaded_resume';
 
-    // If text file, read buffer directly as utf-8
-    if (req.file.mimetype === 'text/plain' || filename.endsWith('.txt')) {
-      extractedText = req.file.buffer.toString('utf-8');
-    } else {
-      // For PDF or binary files, attempt plain text extraction from buffer strings
-      const rawBuf = req.file.buffer.toString('latin1');
-      // Filter printable text blocks
-      const printableMatches = rawBuf.match(/[\x20-\x7E\t\n\r]{4,}/g) || [];
-      extractedText = printableMatches.join(' ');
-    }
-
-    // Extract skills from parsed document text
-    const lowerText = extractedText.toLowerCase();
-    const detectedSet = new Set();
-    SKILL_DICTIONARY.forEach((skill) => {
-      const escaped = skill.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
-      const regex = new RegExp(`(?:\\b|[^a-zA-Z0-9])${escaped}(?:\\b|[^a-zA-Z0-9])`, 'i');
-      if (regex.test(lowerText)) {
-        detectedSet.add(skill);
-      }
+    // 1. Parse document text properly using stream decompression
+    const docResult = await extractTextFromDocument({
+      buffer: file.buffer,
+      mimetype: file.mimetype,
+      originalname: filename,
     });
 
-    const detectedSkills = Array.from(detectedSet);
+    const { cleanedText, sections, format } = docResult;
 
-    // Save to student profile if user is logged in
-    if (req.user && extractedText) {
+    if (!cleanedText || cleanedText.trim().length === 0) {
+      return res.status(422).json({
+        success: false,
+        message: 'Unable to extract readable text from this document. Please ensure it is not a scanned image or password-protected.',
+      });
+    }
+
+    // 2. Perform hybrid extraction (Gemini -> Deterministic Taxonomy fallback)
+    const extraction = await runHybridSkillExtraction(cleanedText, sections);
+    const detectedSkills = extraction.skills;
+
+    // 3. Save to student profile if user is authenticated
+    if (req.user && cleanedText) {
       await StudentProfile.findOneAndUpdate(
         { userId: req.user._id },
         {
           $set: {
-            'resume.rawText': extractedText,
+            'resume.rawText': cleanedText,
             'resume.filename': filename,
             'resume.uploadedAt': new Date(),
           },
@@ -124,20 +144,31 @@ export const handleFileUpload = async (req, res, next) => {
 
     res.json({
       success: true,
-      message: `Resume file uploaded and parsed successfully. Detected ${detectedSkills.length} skills.`,
+      message: `Resume file parsed successfully (${format.toUpperCase()}). Detected ${detectedSkills.length} skills (${extraction.extractionSource === 'ai' ? 'AI-powered' : 'Deterministic rule-based'}).`,
       filename,
       extractedSkills: detectedSkills,
       data: {
         filename,
-        sizeBytes: req.file.size,
-        text: extractedText,
+        format,
+        sizeBytes: file.size,
+        text: cleanedText,
         extractedSkills: detectedSkills,
         allDetected: detectedSkills,
         totalDetected: detectedSkills.length,
+        categorized: extraction.categorized || {},
+        sections: {
+          skills: sections.skills || '',
+          experience: sections.experience || '',
+          projects: sections.projects || '',
+          education: sections.education || '',
+        },
+        extractionSource: extraction.extractionSource,
+        modelUsed: extraction.modelUsed || null,
+        projects: extraction.projects || [],
+        summary: extraction.summary || '',
       },
     });
   } catch (error) {
     next(error);
   }
 };
-

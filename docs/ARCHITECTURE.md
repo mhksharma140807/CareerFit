@@ -11,19 +11,21 @@ CareerFit is designed as a modular MERN stack web application with clear separat
                   |  Tailwind CSS, React Router v6    |
                   |  4 Shared Layouts, 25 Pages       |
                   +-----------------+-----------------+
-                                    | REST (JSON)
+                                    | REST (JSON / Multipart)
                                     v
                   +-----------------------------------+
                   |       Node.js / Express API       |
                   | Auth, Matcher, Assessments,       |
                   | Profile, Reports, Notifications   |
-                  +-----------------+-----------------+
-                                    | Mongoose ODM
-                                    v
-                  +-----------------------------------+
-                  |          MongoDB Local /          |
-                  |          MongoDB Atlas            |
-                  +-------------------+---------------+
+                  +--------+------------------+-------+
+                           |                  |
+           Optional Gemini |                  | Mongoose ODM
+             Flash Service v                  v
+           +---------------+--+      +--------+----------+
+           | Google Gemini          |      | MongoDB Local /   |
+           | 3.5 Flash Lite (Free)  |      | MongoDB Atlas     |
+           | (PII Redacted)         |      +-------------------+
+           +------------------------+
 ```
 
 ---
@@ -78,8 +80,9 @@ CareerFit/
         │   └── Notification.js        # (Planned; 4 genuine event types)
         ├── routes/            # REST API route handlers
         ├── controllers/       # Business logic controllers
+        ├── services/          # Modular external adapters (aiService.js with Gemini Flash & PII redaction)
         ├── middleware/        # Auth verification, role guards, error handling
-        └── utils/             # Matching algorithms, scoring & seed scripts
+        └── utils/             # Document parser (PDF/DOCX), skill taxonomy & normalizer, matching algorithms, seeders
 ```
 
 ---

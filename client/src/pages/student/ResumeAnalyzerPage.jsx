@@ -12,6 +12,7 @@ import {
   ClipboardList,
   Layers,
   Check,
+  Cpu,
 } from 'lucide-react';
 
 export default function ResumeAnalyzerPage() {
@@ -23,6 +24,8 @@ export default function ResumeAnalyzerPage() {
   const [successMsg, setSuccessMsg] = useState('');
 
   const [extractedSkills, setExtractedSkills] = useState([]);
+  const [categorizedSkills, setCategorizedSkills] = useState({});
+  const [extractionSource, setExtractionSource] = useState(null);
   const [selectedSkills, setSelectedSkills] = useState(new Set());
   const [addedSkills, setAddedSkills] = useState(new Set());
   const [isAdding, setIsAdding] = useState(false);
@@ -30,8 +33,16 @@ export default function ResumeAnalyzerPage() {
   const handleFileChange = (e) => {
     const selected = e.target.files?.[0];
     if (selected) {
-      if (selected.type !== 'application/pdf' && !selected.name.endsWith('.txt')) {
-        setError('Please select a valid PDF (.pdf) or text (.txt) document.');
+      const name = (selected.name || '').toLowerCase();
+      const isAllowed =
+        name.endsWith('.pdf') ||
+        name.endsWith('.docx') ||
+        name.endsWith('.txt') ||
+        selected.type === 'application/pdf' ||
+        selected.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+
+      if (!isAllowed) {
+        setError('Please select a valid PDF (.pdf), Word (.docx), or text (.txt) document.');
         return;
       }
       setFile(selected);
@@ -61,7 +72,13 @@ export default function ResumeAnalyzerPage() {
         const skills = res.extractedSkills || res.data?.extractedSkills || res.data?.allDetected || [];
         setExtractedSkills(skills);
         setSelectedSkills(new Set(skills));
-        setSuccessMsg(`Extracted ${skills.length} skills from ${res.filename || file.name}`);
+        setCategorizedSkills(res.data?.categorized || {});
+        setExtractionSource(res.data?.extractionSource || 'deterministic');
+        setSuccessMsg(
+          `Successfully extracted ${skills.length} skills from ${res.filename || file.name} (${
+            res.data?.extractionSource === 'ai' ? 'AI Enhanced' : 'Deterministic Engine'
+          })`
+        );
       } else {
         setError(res.error || res.message || 'Failed to analyze uploaded resume');
       }
@@ -89,6 +106,8 @@ export default function ResumeAnalyzerPage() {
         const skills = res.extractedSkills || res.data?.extractedSkills || res.data?.allDetected || [];
         setExtractedSkills(skills);
         setSelectedSkills(new Set(skills));
+        setCategorizedSkills(res.data?.categorized || {});
+        setExtractionSource(res.data?.extractionSource || 'deterministic');
         setSuccessMsg(`Identified ${skills.length} candidate skills from pasted text.`);
       } else {
         setError(res.error || res.message || 'Failed to extract skills from text');
@@ -140,13 +159,13 @@ export default function ResumeAnalyzerPage() {
       <div>
         <div className="flex items-center gap-2 text-xs font-semibold text-emerald-600 mb-1">
           <Sparkles className="w-4 h-4" />
-          <span>Skill Extraction & Parser</span>
+          <span>Hybrid Skill Extraction Engine</span>
         </div>
         <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
           Resume Skill Analyzer
         </h1>
         <p className="text-sm text-slate-500 mt-1 max-w-2xl leading-relaxed">
-          Extract verified technical and soft skills directly from your resume. Inspect the parsed competencies, choose which ones to accept, and sync them immediately to your student profile.
+          Upload your resume in PDF, Word (DOCX), or Text format. CareerFit decompresses document streams, runs an extensive CSE taxonomy with alias normalization, and detects your verified technical competencies.
         </p>
       </div>
 
@@ -157,23 +176,25 @@ export default function ResumeAnalyzerPage() {
             setActiveTab('upload');
             setError('');
           }}
-          className={`px-4 py-2.5 text-xs font-bold border-b-2 transition flex items-center gap-2 ${activeTab === 'upload'
-            ? 'border-emerald-600 text-emerald-700'
-            : 'border-transparent text-slate-500 hover:text-slate-800'
-            }`}
+          className={`px-4 py-2.5 text-xs font-bold border-b-2 transition flex items-center gap-2 ${
+            activeTab === 'upload'
+              ? 'border-emerald-600 text-emerald-700'
+              : 'border-transparent text-slate-500 hover:text-slate-800'
+          }`}
         >
           <UploadCloud className="w-4 h-4" />
-          Upload Document (PDF / TXT)
+          Upload Document (PDF / DOCX / TXT)
         </button>
         <button
           onClick={() => {
             setActiveTab('paste');
             setError('');
           }}
-          className={`px-4 py-2.5 text-xs font-bold border-b-2 transition flex items-center gap-2 ${activeTab === 'paste'
-            ? 'border-emerald-600 text-emerald-700'
-            : 'border-transparent text-slate-500 hover:text-slate-800'
-            }`}
+          className={`px-4 py-2.5 text-xs font-bold border-b-2 transition flex items-center gap-2 ${
+            activeTab === 'paste'
+              ? 'border-emerald-600 text-emerald-700'
+              : 'border-transparent text-slate-500 hover:text-slate-800'
+          }`}
         >
           <ClipboardList className="w-4 h-4" />
           Paste Resume Text
@@ -206,14 +227,14 @@ export default function ResumeAnalyzerPage() {
               {file ? file.name : 'Choose a file or drag and drop'}
             </p>
             <p className="text-xs text-slate-400 mt-1">
-              Supports PDF (.pdf) or Plain Text (.txt) up to 5MB
+              Supports PDF (.pdf), Microsoft Word (.docx), or Text (.txt) up to 10MB
             </p>
 
             <label className="mt-4 inline-block px-4 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 text-xs font-semibold rounded-xl cursor-pointer shadow-xs transition">
               <span>Browse File</span>
               <input
                 type="file"
-                accept=".pdf,.txt"
+                accept=".pdf,.docx,.txt"
                 onChange={handleFileChange}
                 className="hidden"
               />
@@ -250,7 +271,7 @@ export default function ResumeAnalyzerPage() {
               rows={8}
               value={resumeText}
               onChange={(e) => setResumeText(e.target.value)}
-              placeholder="Paste your education summary, technical project details, or full resume text here..."
+              placeholder="Paste your technical skills, projects, and work experience here..."
               className="w-full text-xs font-mono p-3.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
             />
           </div>
@@ -282,12 +303,26 @@ export default function ResumeAnalyzerPage() {
         <div className="bg-white border border-slate-200/80 rounded-2xl p-6 space-y-5 shadow-xs">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
             <div>
-              <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                <Layers className="w-4 h-4 text-emerald-600" />
-                <span>Extracted Skills ({extractedSkills.length})</span>
-              </h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                  <Layers className="w-4 h-4 text-emerald-600" />
+                  <span>Extracted Skills ({extractedSkills.length})</span>
+                </h2>
+                {extractionSource && (
+                  <span
+                    className={`text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1 ${
+                      extractionSource === 'ai'
+                        ? 'bg-purple-100 text-purple-700 border border-purple-200'
+                        : 'bg-emerald-100 text-emerald-700 border border-emerald-200'
+                    }`}
+                  >
+                    <Cpu className="w-3 h-3" />
+                    {extractionSource === 'ai' ? 'Gemini AI' : 'Deterministic Engine'}
+                  </span>
+                )}
+              </div>
               <p className="text-xs text-slate-500 mt-0.5">
-                Select the detected competencies you want to add to your student profile.
+                Review detected competencies, check or uncheck individual items, and sync them directly to your profile.
               </p>
             </div>
 
@@ -310,41 +345,89 @@ export default function ResumeAnalyzerPage() {
             </div>
           </div>
 
-          {/* Skill Badges Checklist */}
-          <div className="flex flex-wrap gap-2.5">
-            {extractedSkills.map((skill) => {
-              const isSelected = selectedSkills.has(skill);
-              const isAlreadyAdded = addedSkills.has(skill);
+          {/* Categorized breakdown if present */}
+          {Object.keys(categorizedSkills).length > 0 ? (
+            <div className="space-y-4">
+              {Object.entries(categorizedSkills).map(([cat, skills]) => (
+                <div key={cat} className="space-y-1.5">
+                  <span className="text-[11px] font-bold text-slate-600 tracking-wide uppercase">
+                    {cat}
+                  </span>
+                  <div className="flex flex-wrap gap-2">
+                    {skills.map((skill) => {
+                      const isSelected = selectedSkills.has(skill);
+                      const isAlreadyAdded = addedSkills.has(skill);
 
-              return (
-                <button
-                  key={skill}
-                  type="button"
-                  onClick={() => toggleSelectSkill(skill)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-medium border transition flex items-center gap-2 ${isAlreadyAdded
-                    ? 'bg-emerald-50 border-emerald-300 text-emerald-800'
-                    : isSelected
-                      ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
-                      : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300'
+                      return (
+                        <button
+                          key={skill}
+                          type="button"
+                          onClick={() => toggleSelectSkill(skill)}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-medium border transition flex items-center gap-2 ${
+                            isAlreadyAdded
+                              ? 'bg-emerald-50 border-emerald-300 text-emerald-800'
+                              : isSelected
+                              ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                              : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300'
+                          }`}
+                        >
+                          {isAlreadyAdded ? (
+                            <Check className="w-3.5 h-3.5 text-emerald-600" />
+                          ) : isSelected ? (
+                            <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+                          ) : (
+                            <div className="w-3.5 h-3.5 rounded-full border border-slate-300" />
+                          )}
+                          <span>{skill}</span>
+                          {isAlreadyAdded && (
+                            <span className="text-[10px] bg-emerald-100 text-emerald-700 px-1 rounded font-semibold">
+                              Synced
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-2.5">
+              {extractedSkills.map((skill) => {
+                const isSelected = selectedSkills.has(skill);
+                const isAlreadyAdded = addedSkills.has(skill);
+
+                return (
+                  <button
+                    key={skill}
+                    type="button"
+                    onClick={() => toggleSelectSkill(skill)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-medium border transition flex items-center gap-2 ${
+                      isAlreadyAdded
+                        ? 'bg-emerald-50 border-emerald-300 text-emerald-800'
+                        : isSelected
+                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                        : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300'
                     }`}
-                >
-                  {isAlreadyAdded ? (
-                    <Check className="w-3.5 h-3.5 text-emerald-600" />
-                  ) : isSelected ? (
-                    <CheckCircle2 className="w-3.5 h-3.5 text-white" />
-                  ) : (
-                    <div className="w-3.5 h-3.5 rounded-full border border-slate-300" />
-                  )}
-                  <span>{skill}</span>
-                  {isAlreadyAdded && (
-                    <span className="text-[10px] bg-emerald-100 text-emerald-700 px-1 rounded font-semibold">
-                      Synced
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
+                  >
+                    {isAlreadyAdded ? (
+                      <Check className="w-3.5 h-3.5 text-emerald-600" />
+                    ) : isSelected ? (
+                      <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+                    ) : (
+                      <div className="w-3.5 h-3.5 rounded-full border border-slate-300" />
+                    )}
+                    <span>{skill}</span>
+                    {isAlreadyAdded && (
+                      <span className="text-[10px] bg-emerald-100 text-emerald-700 px-1 rounded font-semibold">
+                        Synced
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          )}
 
           {/* Action Row */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-100">
@@ -391,10 +474,9 @@ export default function ResumeAnalyzerPage() {
           <span>How CareerFit extracts skills</span>
         </p>
         <p className="leading-relaxed">
-          CareerFit utilizes an explainable rule-based extraction engine covering 150+ industry engineering competencies across Frontend, Backend, Database, Cloud, DevOps, and Core Computer Science. No data is sent to external third parties.
+          CareerFit utilizes a hybrid architecture: an autonomous deterministic taxonomy covering 150+ CSE industry competencies (Languages, Frontend, Backend, Databases, Cloud/DevOps, Core CS) with exact punctuation handling (C++, C#, .NET), optionally enriched by Google Gemini Flash for deep contextual analysis. All student PII is stripped prior to AI requests.
         </p>
       </div>
     </div>
   );
 }
-

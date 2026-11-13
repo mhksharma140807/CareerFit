@@ -35,11 +35,13 @@ CareerFit is a Career Readiness and Job Matching Platform designed as a college 
 - [x] **Module 9**: Admin Management Suite (`/admin` dashboard, `/admin/jobs` CRUD, `/admin/assessments` question bank, `/admin/users` student directory).
 - [x] **Module 10**: Quality Verification, Accessibility & Viva Demonstration (Verified clean client build with 0 errors in 8.2s, server files syntax checked, ₹0 budget compliance check).
 
-### Phase 3: AI Capabilities (Planned)
-- [ ] Modular AI service adapter (Google Gemini API backend wrapper).
-- [ ] Resume skill extraction enrichment & project suggestions.
-- [ ] Personalized learning path & improvement recommendations.
-- [ ] **Strict zero-budget fallback**: 100% deterministic local behavior when API key is missing or quota is exhausted.
+### Phase 3: AI Capabilities & Hybrid Architecture (COMPLETED)
+- [x] Document Parser & Stream Decompression (`pdf-parse` v2 for FlateDecode streams, `mammoth` for DOCX, section segmentation).
+- [x] Comprehensive CSE Skill Taxonomy & Alias Normalizer (`skillTaxonomy.js` with 150+ skills across 8 categories, punctuation-safe regex for `C++`, `C#`, `.NET`, `Node.js`).
+- [x] Modular Gemini Flash AI Adapter (`aiService.js` supporting `gemini-3.5-flash-lite` on free tier, PII redaction before transmission, strict JSON schema validation).
+- [x] Autonomous Zero-Budget Fallback (100% deterministic local behavior when API key is unconfigured, times out, or rate limits; explicit `extractionSource: 'ai' | 'deterministic'`).
+- [x] Multi-Dimensional Performance Analysis (Aptitude vs. Technical separation, weak-topic identification from question tags, 60/40 composite readiness formula preserved).
+- [x] Verified unit & integration test suites (`resumeAndSkillEngine.test.js`, `documentExtractionFormats.test.js`).
 
 ### Phase 4: UI/UX Redesign & Viva Polish (Planned)
 - [ ] Visual identity tokens & typography hierarchy.

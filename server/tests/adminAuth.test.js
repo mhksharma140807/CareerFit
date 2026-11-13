@@ -33,13 +33,21 @@ test('Admin Authentication & RBAC Authorization Suite', async (t) => {
     baseUrl = `http://127.0.0.1:${port}/api`;
   });
 
-  await t.test('1. Admin Login with Configured Credentials', async () => {
+  await t.test('1. Admin Login with Configured Credentials', async (tCase) => {
+    const adminEmail = process.env.ADMIN_EMAIL || 'admin@careerfit.local';
+    const adminPassword = process.env.ADMIN_PASSWORD;
+
+    if (!adminPassword) {
+      tCase.skip('ADMIN_PASSWORD environment variable not set, skipping live credential login test');
+      return;
+    }
+
     const res = await fetch(`${baseUrl}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        email: process.env.ADMIN_EMAIL || 'admin@careerfit.local',
-        password: process.env.ADMIN_PASSWORD || 'Admin#CareerFit2026!',
+        email: adminEmail,
+        password: adminPassword,
       }),
     });
 
