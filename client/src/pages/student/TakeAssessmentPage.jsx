@@ -9,6 +9,7 @@ import {
   Send,
   HelpCircle,
   CheckCircle2,
+  Sparkles,
 } from 'lucide-react';
 
 export default function TakeAssessmentPage() {
@@ -127,23 +128,23 @@ export default function TakeAssessmentPage() {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
-        <div className="w-10 h-10 border-4 border-emerald-600/20 border-t-emerald-600 rounded-full animate-spin" />
-        <p className="text-sm font-semibold text-slate-600">Loading assessment questions...</p>
+        <div className="w-10 h-10 border-4 border-brand-500/20 border-t-brand-600 rounded-full animate-spin" />
+        <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">Loading assessment questions...</p>
       </div>
     );
   }
 
   if (error || !assessment || questions.length === 0) {
     return (
-      <div className="max-w-md mx-auto text-center py-16 space-y-4">
-        <div className="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto">
-          <AlertTriangle className="w-6 h-6" />
+      <div className="max-w-md mx-auto text-center py-16 space-y-4 glass-card rounded-3xl border border-slate-200 dark:border-obsidian-800 p-8">
+        <div className="w-14 h-14 rounded-2xl bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto border border-rose-500/20">
+          <AlertTriangle className="w-7 h-7" />
         </div>
-        <h2 className="text-lg font-bold text-slate-900">Assessment Unavailable</h2>
-        <p className="text-xs text-slate-500">{error || 'No questions available for this test.'}</p>
+        <h2 className="text-lg font-bold text-slate-900 dark:text-white">Assessment Unavailable</h2>
+        <p className="text-xs text-slate-500 dark:text-slate-400">{error || 'No questions available for this test.'}</p>
         <button
           onClick={() => navigate('/assessments')}
-          className="px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-semibold hover:bg-slate-800 transition"
+          className="px-5 py-2.5 bg-gradient-to-r from-brand-600 to-electric-600 text-white rounded-xl text-xs font-bold shadow-md hover:shadow-glow-brand transition"
         >
           Return to Assessment Center
         </button>
@@ -161,24 +162,25 @@ export default function TakeAssessmentPage() {
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       {/* Test Header & Timer Bar */}
-      <div className="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-5 shadow-xs flex items-center justify-between gap-4">
+      <div className="glass-card border border-slate-200/80 dark:border-obsidian-750/70 rounded-3xl p-4 sm:p-5 shadow-sm flex items-center justify-between gap-4">
         <div>
-          <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400 bg-brand-500/10 border border-brand-500/20 px-2.5 py-0.5 rounded-full">
             {assessment.category || 'Assessment'}
           </span>
-          <h1 className="text-base sm:text-lg font-extrabold text-slate-900 mt-1">
+          <h1 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white mt-1">
             {assessment.title}
           </h1>
         </div>
 
         {/* Timer Box */}
         <div
-          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl font-mono text-sm font-bold border transition ${isTimeCritical
-            ? 'bg-rose-50 border-rose-300 text-rose-600 animate-pulse'
-            : 'bg-slate-50 border-slate-200 text-slate-700'
-            }`}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl font-mono text-sm font-bold border transition-all duration-200 ${
+            isTimeCritical
+              ? 'bg-rose-50 dark:bg-rose-950/60 border-rose-300 dark:border-rose-800 text-rose-600 dark:text-rose-400 animate-pulse'
+              : 'bg-slate-50 dark:bg-obsidian-900 border-slate-200 dark:border-obsidian-800 text-slate-700 dark:text-slate-200'
+          }`}
         >
-          <Clock className="w-4 h-4" />
+          <Clock className="w-4 h-4 text-brand-500" />
           <span>
             {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
           </span>
@@ -188,24 +190,24 @@ export default function TakeAssessmentPage() {
       {/* Main Test Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Question Area (3 cols) */}
-        <div className="lg:col-span-3 bg-white border border-slate-200/80 rounded-2xl p-6 sm:p-8 shadow-xs flex flex-col justify-between min-h-[460px]">
+        <div className="lg:col-span-3 glass-card border border-slate-200/80 dark:border-obsidian-750/70 rounded-3xl p-6 sm:p-8 shadow-sm flex flex-col justify-between min-h-[460px]">
           <div className="space-y-6">
-            <div className="flex items-center justify-between text-xs text-slate-500 border-b border-slate-100 pb-3">
-              <span className="font-bold text-slate-700">
+            <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-obsidian-800 pb-3">
+              <span className="font-bold text-slate-900 dark:text-white">
                 Question {currentIndex + 1} of {questions.length}
               </span>
               <span>
                 Status:{' '}
                 {answers[currentQKey] !== undefined ? (
-                  <span className="text-emerald-600 font-semibold">Answered</span>
+                  <span className="text-brand-600 dark:text-brand-400 font-bold">Answered</span>
                 ) : (
-                  <span className="text-slate-400">Not Answered</span>
+                  <span className="text-slate-400 dark:text-slate-500">Not Answered</span>
                 )}
               </span>
             </div>
 
             {/* Question Text */}
-            <p className="text-sm sm:text-base font-semibold text-slate-800 leading-relaxed">
+            <p className="text-sm sm:text-base font-semibold text-slate-800 dark:text-slate-100 leading-relaxed">
               {currentQ.questionText}
             </p>
 
@@ -219,16 +221,18 @@ export default function TakeAssessmentPage() {
                     key={optIdx}
                     type="button"
                     onClick={() => handleSelectOption(currentQKey, optIdx)}
-                    className={`w-full text-left p-3.5 sm:p-4 rounded-xl border text-xs sm:text-sm font-medium transition flex items-center gap-3.5 ${isSelected
-                      ? 'border-emerald-600 bg-emerald-50/70 text-emerald-950 font-semibold shadow-xs ring-1 ring-emerald-600'
-                      : 'border-slate-200 hover:border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
-                      }`}
+                    className={`w-full text-left p-4 rounded-2xl border text-xs sm:text-sm font-medium transition-all duration-200 flex items-center gap-3.5 ${
+                      isSelected
+                        ? 'border-brand-500 bg-brand-50/70 dark:bg-brand-950/40 text-brand-950 dark:text-white font-semibold shadow-md ring-1 ring-brand-500'
+                        : 'border-slate-200 dark:border-obsidian-800 hover:border-slate-300 dark:hover:border-obsidian-700 bg-white dark:bg-obsidian-900/60 text-slate-700 dark:text-slate-300'
+                    }`}
                   >
                     <div
-                      className={`w-6 h-6 rounded-lg text-xs font-bold flex items-center justify-center shrink-0 border ${isSelected
-                        ? 'bg-emerald-600 text-white border-emerald-600'
-                        : 'bg-slate-100 text-slate-600 border-slate-200'
-                        }`}
+                      className={`w-7 h-7 rounded-xl text-xs font-bold flex items-center justify-center shrink-0 border transition ${
+                        isSelected
+                          ? 'bg-gradient-to-r from-brand-600 to-electric-600 text-white border-transparent'
+                          : 'bg-slate-100 dark:bg-obsidian-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-obsidian-700'
+                      }`}
                     >
                       {String.fromCharCode(65 + optIdx)}
                     </div>
@@ -240,13 +244,13 @@ export default function TakeAssessmentPage() {
           </div>
 
           {/* Nav Controls */}
-          <div className="pt-8 border-t border-slate-100 flex items-center justify-between gap-3 mt-6">
+          <div className="pt-8 border-t border-slate-100 dark:border-obsidian-800 flex items-center justify-between gap-3 mt-6">
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={() => setCurrentIndex((prev) => Math.max(0, prev - 1))}
                 disabled={currentIndex === 0}
-                className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 disabled:opacity-40 text-slate-700 text-xs font-semibold rounded-xl transition flex items-center gap-1.5"
+                className="px-4 py-2 bg-slate-100 dark:bg-obsidian-800 hover:bg-slate-200 dark:hover:bg-obsidian-750 disabled:opacity-40 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-xl transition flex items-center gap-1.5"
               >
                 <ChevronLeft className="w-4 h-4" />
                 <span>Previous</span>
@@ -256,7 +260,7 @@ export default function TakeAssessmentPage() {
                 <button
                   type="button"
                   onClick={() => handleClearOption(currentQKey)}
-                  className="text-xs text-slate-400 hover:text-slate-600 px-2 py-1"
+                  className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 px-2 py-1"
                 >
                   Clear Selection
                 </button>
@@ -268,7 +272,7 @@ export default function TakeAssessmentPage() {
                 <button
                   type="button"
                   onClick={() => setCurrentIndex((prev) => Math.min(questions.length - 1, prev + 1))}
-                  className="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5"
+                  className="px-5 py-2.5 bg-slate-900 dark:bg-obsidian-800 hover:bg-slate-800 dark:hover:bg-obsidian-700 text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5"
                 >
                   <span>Next</span>
                   <ChevronRight className="w-4 h-4" />
@@ -277,7 +281,7 @@ export default function TakeAssessmentPage() {
                 <button
                   type="button"
                   onClick={() => setShowConfirmModal(true)}
-                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition shadow-xs flex items-center gap-1.5"
+                  className="px-6 py-2.5 bg-gradient-to-r from-brand-600 via-electric-600 to-brand-500 hover:from-brand-500 hover:to-electric-500 text-white text-xs font-bold rounded-xl transition shadow-md hover:shadow-glow-brand flex items-center gap-1.5"
                 >
                   <Send className="w-3.5 h-3.5" />
                   <span>Submit Exam</span>
@@ -289,12 +293,12 @@ export default function TakeAssessmentPage() {
 
         {/* Sidebar Question Palette (1 col) */}
         <div className="space-y-4">
-          <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs space-y-4">
+          <div className="glass-card border border-slate-200/80 dark:border-obsidian-750/70 rounded-3xl p-5 shadow-sm space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
                 Question Palette
               </h3>
-              <span className="text-xs font-semibold text-emerald-600">
+              <span className="text-xs font-bold text-brand-600 dark:text-brand-400">
                 {answeredCount}/{questions.length} answered
               </span>
             </div>
@@ -311,13 +315,15 @@ export default function TakeAssessmentPage() {
                     key={qKey || idx}
                     type="button"
                     onClick={() => setCurrentIndex(idx)}
-                    className={`h-9 rounded-xl text-xs font-bold transition flex items-center justify-center border ${isCurrent
-                      ? 'border-emerald-600 ring-2 ring-emerald-500/30'
-                      : 'border-slate-200'
-                      } ${isAnswered
-                        ? 'bg-emerald-600 text-white'
-                        : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
-                      }`}
+                    className={`h-9 rounded-xl text-xs font-bold transition flex items-center justify-center border ${
+                      isCurrent
+                        ? 'border-brand-500 ring-2 ring-brand-500/30'
+                        : 'border-slate-200 dark:border-obsidian-800'
+                    } ${
+                      isAnswered
+                        ? 'bg-gradient-to-r from-brand-600 to-electric-600 text-white'
+                        : 'bg-slate-50 dark:bg-obsidian-900 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-obsidian-800'
+                    }`}
                   >
                     {idx + 1}
                   </button>
@@ -325,13 +331,13 @@ export default function TakeAssessmentPage() {
               })}
             </div>
 
-            <div className="pt-3 border-t border-slate-100 space-y-1.5 text-[11px] text-slate-500">
+            <div className="pt-3 border-t border-slate-100 dark:border-obsidian-800 space-y-1.5 text-[11px] text-slate-500 dark:text-slate-400">
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded bg-emerald-600" />
+                <div className="w-3 h-3 rounded bg-gradient-to-r from-brand-600 to-electric-600" />
                 <span>Answered</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded bg-slate-100 border border-slate-200" />
+                <div className="w-3 h-3 rounded bg-slate-100 dark:bg-obsidian-800 border border-slate-200 dark:border-obsidian-700" />
                 <span>Not Answered</span>
               </div>
             </div>
@@ -339,7 +345,7 @@ export default function TakeAssessmentPage() {
             <button
               type="button"
               onClick={() => setShowConfirmModal(true)}
-              className="w-full mt-2 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition shadow-xs flex items-center justify-center gap-1.5"
+              className="w-full mt-2 py-2.5 bg-gradient-to-r from-brand-600 via-electric-600 to-brand-500 hover:from-brand-500 hover:to-electric-500 text-white text-xs font-bold rounded-xl transition shadow-md hover:shadow-glow-brand flex items-center justify-center gap-1.5"
             >
               <Send className="w-3.5 h-3.5" />
               <span>Finish & Submit</span>
@@ -350,14 +356,14 @@ export default function TakeAssessmentPage() {
 
       {/* Confirmation Modal */}
       {showConfirmModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-sm w-full p-6 space-y-4 shadow-xl border border-slate-100">
-            <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="glass-card bg-white dark:bg-obsidian-900 rounded-3xl max-w-sm w-full p-6 space-y-4 shadow-2xl border border-slate-200 dark:border-obsidian-750">
+            <div className="w-12 h-12 rounded-2xl bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center border border-brand-500/20">
               <CheckCircle2 className="w-6 h-6" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-slate-900">Submit Assessment?</h3>
-              <p className="text-xs text-slate-500 mt-1">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">Submit Assessment?</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
                 You have answered {answeredCount} out of {questions.length} questions. Once submitted, your answers will be evaluated immediately.
               </p>
             </div>
@@ -366,7 +372,7 @@ export default function TakeAssessmentPage() {
               <button
                 type="button"
                 onClick={() => setShowConfirmModal(false)}
-                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition"
+                className="px-4 py-2 bg-slate-100 dark:bg-obsidian-800 hover:bg-slate-200 dark:hover:bg-obsidian-750 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-xl transition"
               >
                 Continue Test
               </button>
@@ -374,7 +380,7 @@ export default function TakeAssessmentPage() {
                 type="button"
                 onClick={submitAnswers}
                 disabled={submitting}
-                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition shadow-xs"
+                className="px-5 py-2 bg-gradient-to-r from-brand-600 to-electric-600 text-white text-xs font-bold rounded-xl transition shadow-md"
               >
                 {submitting ? 'Evaluating...' : 'Yes, Submit'}
               </button>
@@ -385,4 +391,3 @@ export default function TakeAssessmentPage() {
     </div>
   );
 }
-

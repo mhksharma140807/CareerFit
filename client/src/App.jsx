@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import { ProtectedRoute, AdminRoute, PublicOnlyRoute } from './components/RouteGuards';
 
 // Layouts
@@ -45,8 +46,9 @@ import AdminUsersPage from './pages/admin/AdminUsersPage';
 export default function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <Routes>
+      <ThemeProvider>
+        <AuthProvider>
+          <Routes>
           {/* Public & Informational Routes */}
           <Route element={<PublicLayout />}>
             <Route path="/" element={<HomePage />} />
@@ -137,7 +139,8 @@ export default function App() {
             <Route path="*" element={<NotFoundPage />} />
           </Route>
         </Routes>
-      </AuthProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </BrowserRouter>
   );
 }

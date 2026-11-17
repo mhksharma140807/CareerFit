@@ -1,0 +1,14 @@
+<svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="cf-favicon-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stopColor="#7C3AED" />
+      <stop offset="50%" stopColor="#6366F1" />
+      <stop offset="100%" stopColor="#4338CA" />
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="36" height="36" rx="10" fill="url(#cf-favicon-grad)" />
+  <rect x="2.5" y="2.5" width="35" height="35" rx="9.5" stroke="rgba(255,255,255,0.3)" stroke-width="1" fill="none" />
+  <path d="M20 7L24.5 17L30 20L24.5 23L20 33L15.5 23L10 20L15.5 17L20 7Z" fill="white" />
+  <circle cx="20" cy="20" r="3.2" fill="#7C3AED" />
+  <circle cx="20" cy="20" r="1.5" fill="white" />
+</svg>

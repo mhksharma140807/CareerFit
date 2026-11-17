@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
+import ThemeToggle from '../components/ThemeToggle';
+import BrandLogo from '../components/BrandLogo';
 import {
   Compass,
   LayoutDashboard,
@@ -19,6 +21,9 @@ import {
   Menu,
   X,
   ExternalLink,
+  ChevronRight,
+  Sparkles,
+  Search,
 } from 'lucide-react';
 
 export default function StudentLayout() {
@@ -46,11 +51,10 @@ export default function StudentLayout() {
 
   useEffect(() => {
     fetchNotifs();
-    const interval = setInterval(fetchNotifs, 30000); // 30s polling
+    const interval = setInterval(fetchNotifs, 30000);
     return () => clearInterval(interval);
   }, []);
 
-  // Close dropdowns on route change
   useEffect(() => {
     setMobileMenuOpen(false);
     setNotifDropdownOpen(false);
@@ -59,7 +63,7 @@ export default function StudentLayout() {
   const navItems = [
     { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { label: 'My Profile', path: '/profile', icon: User },
-    { label: 'Resume Analyzer', path: '/resume', icon: FileText },
+    { label: 'Resume Analyzer', path: '/resume', icon: FileText, highlight: true },
     { label: 'Job Directory', path: '/jobs', icon: Briefcase },
     { label: 'Saved Jobs', path: '/saved-jobs', icon: Bookmark },
     { label: 'Assessment Center', path: '/assessments', icon: Award },
@@ -72,20 +76,12 @@ export default function StudentLayout() {
   const isActive = (path) => location.pathname === path;
 
   return (
-    <div className="min-h-screen flex bg-slate-50 text-slate-800">
-      {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex flex-col w-64 bg-white border-r border-slate-200 sticky top-0 h-screen z-20">
-        {/* Brand */}
-        <div className="h-16 px-6 border-b border-slate-200 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white shadow-xs">
-              <Compass className="w-5 h-5" />
-            </div>
-            <div>
-              <span className="text-base font-bold text-slate-900 tracking-tight">CareerFit</span>
-              <span className="text-[10px] font-medium text-emerald-600 block leading-none">Student Portal</span>
-            </div>
-          </Link>
+    <div className="min-h-screen flex bg-[#FAF8FF] dark:bg-[#090711] text-slate-800 dark:text-slate-100 transition-colors duration-200">
+      {/* Desktop Sidebar (Inspired by Orbit and mockai) */}
+      <aside className="hidden lg:flex flex-col w-64 bg-white/90 dark:bg-obsidian-900/90 backdrop-blur-xl border-r border-brand-100/70 dark:border-brand-900/30 sticky top-0 h-screen z-30">
+        {/* Brand Header */}
+        <div className="h-16 px-6 border-b border-brand-100/60 dark:border-brand-900/30 flex items-center justify-between">
+          <BrandLogo size="md" subtitle="Student Portal" />
         </div>
 
         {/* Navigation Links */}
@@ -97,48 +93,82 @@ export default function StudentLayout() {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition ${active
-                  ? 'bg-emerald-50 text-emerald-800 font-bold border border-emerald-200/60'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                  }`}
+                className={`group flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 ${
+                  active
+                    ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white font-bold shadow-md shadow-brand-500/20'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-brand-700 dark:hover:text-white hover:bg-brand-50/70 dark:hover:bg-brand-950/40'
+                }`}
               >
-                <div className="flex items-center gap-2.5">
-                  <Icon className={`w-4 h-4 ${active ? 'text-emerald-700' : 'text-slate-500'}`} />
+                <div className="flex items-center gap-3">
+                  <Icon
+                    className={`w-4 h-4 transition-transform group-hover:scale-110 ${
+                      active ? 'text-white' : 'text-slate-400 dark:text-slate-500 group-hover:text-brand-600 dark:group-hover:text-brand-400'
+                    }`}
+                  />
                   <span>{item.label}</span>
                 </div>
+
                 {item.badge > 0 && (
-                  <span className="px-1.5 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-bold">
+                  <span
+                    className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                      active
+                        ? 'bg-white text-brand-700'
+                        : 'bg-brand-100 text-brand-800 dark:bg-brand-900 dark:text-brand-200'
+                    }`}
+                  >
                     {item.badge}
                   </span>
+                )}
+
+                {item.highlight && !active && (
+                  <span className="w-2 h-2 rounded-full bg-brand-500 animate-pulse" />
                 )}
               </Link>
             );
           })}
-
-          {isAdmin && (
-            <div className="pt-4 mt-4 border-t border-slate-200">
-              <Link
-                to="/admin"
-                className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition"
-              >
-                <Shield className="w-4 h-4" />
-                <span>Admin Console</span>
-              </Link>
-            </div>
-          )}
         </nav>
 
-        {/* User Card & Sign Out */}
-        <div className="p-4 border-t border-slate-200 bg-slate-50/50">
-          <div className="flex items-center justify-between">
-            <div className="truncate mr-2">
-              <p className="text-xs font-bold text-slate-900 truncate">{user?.name || 'Student'}</p>
-              <p className="text-[11px] text-slate-500 truncate">{user?.email}</p>
+        {/* Bottom Sidebar Feature Card (mockai style) */}
+        <div className="p-3 border-t border-brand-100/60 dark:border-brand-900/30">
+          <div className="p-3.5 rounded-2xl bg-gradient-to-br from-brand-600 via-brand-700 to-indigo-800 text-white shadow-md relative overflow-hidden">
+            <div className="absolute -right-4 -bottom-4 w-20 h-20 bg-white/10 rounded-full blur-xl pointer-events-none" />
+            <div className="flex items-center gap-2 mb-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-brand-200" />
+              <span className="text-[11px] font-bold tracking-wide text-brand-100">
+                Placement Readiness
+              </span>
             </div>
+            <p className="text-[11px] text-brand-100/90 leading-tight mb-2.5">
+              Evaluate your skills against campus recruitment criteria.
+            </p>
+            <Link
+              to="/resume"
+              className="inline-flex items-center justify-center w-full py-1.5 px-3 rounded-xl bg-white text-brand-800 hover:bg-brand-50 text-[11px] font-extrabold shadow-xs transition-transform hover:scale-[1.02]"
+            >
+              Analyze Resume
+            </Link>
+          </div>
+
+          {/* User Profile Capsule */}
+          <div className="mt-3 pt-3 border-t border-slate-100 dark:border-white/5 flex items-center justify-between">
+            <div className="flex items-center gap-2.5 overflow-hidden">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-brand-600 to-indigo-500 text-white flex items-center justify-center text-xs font-bold uppercase shrink-0">
+                {user?.name ? user.name[0] : 'S'}
+              </div>
+              <div className="truncate">
+                <span className="block text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
+                  {user?.name || 'Student'}
+                </span>
+                <span className="block text-[10px] text-slate-400 truncate">
+                  {user?.email || 'student@college.edu'}
+                </span>
+              </div>
+            </div>
+
             <button
               onClick={logout}
               title="Sign Out"
-              className="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-white rounded-lg border border-slate-200 transition flex-shrink-0"
+              className="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg transition-colors"
             >
               <LogOut className="w-4 h-4" />
             </button>
@@ -147,187 +177,167 @@ export default function StudentLayout() {
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 pb-16 lg:pb-0">
+      <div className="flex-1 flex flex-col min-w-0">
         {/* Top Header Bar */}
-        <header className="h-16 bg-white border-b border-slate-200 sticky top-0 z-30 px-4 sm:px-6 flex items-center justify-between">
+        <header className="h-16 glass-panel sticky top-0 z-20 px-4 sm:px-6 flex items-center justify-between border-b border-brand-100/60 dark:border-brand-900/30">
           <div className="flex items-center gap-3">
             <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 -ml-2 text-slate-600 hover:text-slate-900 lg:hidden rounded-lg"
+              onClick={() => setMobileMenuOpen(true)}
+              className="lg:hidden p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5"
+              aria-label="Open Mobile Menu"
             >
-              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              <Menu className="w-5 h-5" />
             </button>
 
-            <div className="lg:hidden flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-emerald-600 flex items-center justify-center text-white">
-                <Compass className="w-4 h-4" />
-              </div>
-              <span className="font-bold text-slate-900 text-sm">CareerFit</span>
+            {/* Breadcrumb Title */}
+            <div className="hidden sm:flex items-center gap-2 text-xs text-slate-400">
+              <Link to="/dashboard" className="hover:text-brand-600 dark:hover:text-brand-400 font-medium">
+                Student
+              </Link>
+              <ChevronRight className="w-3.5 h-3.5 text-slate-300" />
+              <span className="font-bold text-slate-900 dark:text-white capitalize">
+                {location.pathname.replace('/', '').replace('-', ' ') || 'Dashboard'}
+              </span>
             </div>
           </div>
 
+          {/* Right Header Controls */}
           <div className="flex items-center gap-3">
-            {/* Notification Bell Dropdown */}
+            <ThemeToggle />
+
+            {/* Notifications Popover */}
             <div className="relative">
               <button
                 onClick={() => setNotifDropdownOpen(!notifDropdownOpen)}
-                className="relative p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition"
-                title="Notifications"
+                className="relative p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-brand-600 hover:bg-brand-50/60 dark:hover:bg-white/5 transition"
+                aria-label="View notifications"
               >
                 <Bell className="w-4 h-4" />
                 {unreadCount > 0 && (
-                  <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-emerald-600 ring-2 ring-white" />
+                  <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
                 )}
               </button>
 
-              {/* Notification Dropdown Panel */}
               {notifDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-xl shadow-lg border border-slate-200 py-3 z-50 animate-in fade-in zoom-in-95">
-                  <div className="px-4 pb-2 border-b border-slate-100 flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-900">Notifications</span>
+                <div className="absolute right-0 mt-2 w-80 glass-card rounded-2xl shadow-xl p-3 z-50 animate-in fade-in zoom-in-95 duration-150">
+                  <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-100 dark:border-white/5">
+                    <span className="text-xs font-bold text-slate-900 dark:text-white">Notifications</span>
                     <Link
                       to="/notifications"
                       onClick={() => setNotifDropdownOpen(false)}
-                      className="text-[11px] font-semibold text-emerald-600 hover:text-emerald-700"
+                      className="text-[11px] font-semibold text-brand-600 dark:text-brand-400 hover:underline"
                     >
                       View All
                     </Link>
                   </div>
-                  <div className="max-h-72 overflow-y-auto divide-y divide-slate-100">
-                    {recentNotifs.length > 0 ? (
-                      recentNotifs.map((n) => (
+
+                  {recentNotifs.length === 0 ? (
+                    <p className="text-xs text-slate-400 py-4 text-center">No new notifications</p>
+                  ) : (
+                    <div className="space-y-1.5 max-h-64 overflow-y-auto">
+                      {recentNotifs.map((n) => (
                         <div
                           key={n._id}
-                          onClick={() => {
-                            setNotifDropdownOpen(false);
-                            if (n.link) navigate(n.link);
-                          }}
-                          className={`p-3 text-xs hover:bg-slate-50 cursor-pointer transition ${!n.isRead ? 'bg-emerald-50/40' : ''
-                            }`}
+                          className="p-2.5 rounded-xl hover:bg-brand-50/60 dark:hover:bg-white/5 transition text-xs"
                         >
-                          <p className="font-semibold text-slate-900">{n.title}</p>
-                          <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-2">{n.message}</p>
+                          <p className="font-semibold text-slate-800 dark:text-slate-200">{n.title}</p>
+                          <p className="text-[11px] text-slate-400 line-clamp-1">{n.message}</p>
                         </div>
-                      ))
-                    ) : (
-                      <div className="py-6 text-center text-xs text-slate-400">
-                        No recent notifications.
-                      </div>
-                    )}
-                  </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
 
-            {/* User Pill */}
-            <div className="flex items-center gap-2 pl-3 border-l border-slate-200">
-              <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-800 font-bold text-xs flex items-center justify-center border border-emerald-200">
-                {user?.name ? user.name.charAt(0).toUpperCase() : 'S'}
+            {isAdmin && (
+              <Link
+                to="/admin"
+                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-amber-700 bg-amber-50 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200/60 hover:bg-amber-100"
+              >
+                <Shield className="w-3.5 h-3.5" />
+                <span>Admin View</span>
+              </Link>
+            )}
+
+            {/* Quick Profile Pill */}
+            <Link
+              to="/profile"
+              className="flex items-center gap-2 pl-2 pr-3 py-1 rounded-full border border-slate-200 dark:border-white/10 hover:border-brand-300 dark:hover:border-brand-500/40 transition bg-white/70 dark:bg-obsidian-800/80"
+            >
+              <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-brand-600 to-indigo-500 text-white flex items-center justify-center text-[11px] font-bold uppercase">
+                {user?.name ? user.name[0] : 'S'}
               </div>
-              <span className="text-xs font-semibold text-slate-800 hidden sm:inline">{user?.name}</span>
-            </div>
+              <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 hidden md:inline max-w-[100px] truncate">
+                {user?.name || 'Student'}
+              </span>
+            </Link>
           </div>
         </header>
 
-        {/* Mobile Slideout Menu */}
-        {mobileMenuOpen && (
-          <div className="lg:hidden fixed inset-0 z-40 flex">
-            <div className="fixed inset-0 bg-slate-900/40" onClick={() => setMobileMenuOpen(false)} />
-            <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white border-r border-slate-200 z-50">
-              <div className="p-4 border-b border-slate-200 flex items-center justify-between">
-                <span className="font-bold text-sm text-slate-900">CareerFit Menu</span>
-                <button onClick={() => setMobileMenuOpen(false)} className="p-1 text-slate-500">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-              <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-                {navItems.map((item) => {
-                  const Icon = item.icon;
-                  const active = isActive(item.path);
-                  return (
-                    <Link
-                      key={item.path}
-                      to={item.path}
-                      className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold ${active ? 'bg-emerald-50 text-emerald-800 font-bold' : 'text-slate-600 hover:bg-slate-100'
-                        }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <Icon className="w-4 h-4 text-slate-500" />
-                        <span>{item.label}</span>
-                      </div>
-                      {item.badge > 0 && (
-                        <span className="px-1.5 py-0.5 rounded-full bg-emerald-600 text-white text-[10px]">
-                          {item.badge}
-                        </span>
-                      )}
-                    </Link>
-                  );
-                })}
-                {isAdmin && (
-                  <Link
-                    to="/admin"
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold text-indigo-700 bg-indigo-50"
-                  >
-                    <Shield className="w-4 h-4" />
-                    <span>Admin Console</span>
-                  </Link>
-                )}
-              </nav>
-              <div className="p-4 border-t border-slate-200">
-                <button
-                  onClick={logout}
-                  className="w-full py-2 px-3 text-xs font-semibold text-rose-600 bg-rose-50 rounded-lg flex items-center justify-center gap-2"
-                >
-                  <LogOut className="w-4 h-4" />
-                  <span>Sign Out</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Page Content Outlet */}
+        {/* Page Content Body */}
         <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
           <Outlet />
         </main>
       </div>
 
-      {/* Mobile Bottom Navigation Bar (Top 4 actions) */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 h-14 bg-white border-t border-slate-200 flex items-center justify-around z-30 px-2 shadow-lg">
-        <Link
-          to="/dashboard"
-          className={`flex flex-col items-center justify-center flex-1 py-1 ${isActive('/dashboard') ? 'text-emerald-600 font-bold' : 'text-slate-500'
-            }`}
-        >
-          <LayoutDashboard className="w-4 h-4" />
-          <span className="text-[10px] mt-0.5">Home</span>
-        </Link>
-        <Link
-          to="/jobs"
-          className={`flex flex-col items-center justify-center flex-1 py-1 ${isActive('/jobs') ? 'text-emerald-600 font-bold' : 'text-slate-500'
-            }`}
-        >
-          <Briefcase className="w-4 h-4" />
-          <span className="text-[10px] mt-0.5">Jobs</span>
-        </Link>
-        <Link
-          to="/assessments"
-          className={`flex flex-col items-center justify-center flex-1 py-1 ${isActive('/assessments') ? 'text-emerald-600 font-bold' : 'text-slate-500'
-            }`}
-        >
-          <Award className="w-4 h-4" />
-          <span className="text-[10px] mt-0.5">Tests</span>
-        </Link>
-        <Link
-          to="/profile"
-          className={`flex flex-col items-center justify-center flex-1 py-1 ${isActive('/profile') ? 'text-emerald-600 font-bold' : 'text-slate-500'
-            }`}
-        >
-          <User className="w-4 h-4" />
-          <span className="text-[10px] mt-0.5">Profile</span>
-        </Link>
-      </nav>
+      {/* Mobile Drawer */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <div
+            className="fixed inset-0 bg-obsidian-950/60 backdrop-blur-xs"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+          <div className="fixed inset-y-0 left-0 w-72 bg-white dark:bg-obsidian-900 border-r border-brand-100 dark:border-brand-900/30 flex flex-col p-4 shadow-2xl">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-white/5 mb-3">
+              <BrandLogo size="sm" subtitle="Student Portal" />
+              <button
+                onClick={() => setMobileMenuOpen(false)}
+                className="p-1.5 text-slate-500 hover:text-slate-800 dark:hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <nav className="flex-1 space-y-1 overflow-y-auto">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const active = isActive(item.path);
+                return (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold ${
+                      active
+                        ? 'bg-brand-600 text-white font-bold'
+                        : 'text-slate-600 dark:text-slate-400 hover:bg-brand-50 dark:hover:bg-white/5'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Icon className="w-4 h-4" />
+                      <span>{item.label}</span>
+                    </div>
+                    {item.badge > 0 && (
+                      <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-brand-100 text-brand-800">
+                        {item.badge}
+                      </span>
+                    )}
+                  </Link>
+                );
+              })}
+            </nav>
+
+            <button
+              onClick={logout}
+              className="mt-3 flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 text-xs font-bold"
+            >
+              <LogOut className="w-4 h-4" />
+              <span>Sign Out</span>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
-
