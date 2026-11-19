@@ -22,6 +22,25 @@ const questionSchema = new mongoose.Schema({
     trim: true,
     default: '',
   },
+  competency: {
+    type: String,
+    trim: true,
+    default: 'General',
+  },
+  topic: {
+    type: String,
+    trim: true,
+    default: 'General',
+  },
+  difficulty: {
+    type: String,
+    enum: ['Easy', 'Medium', 'Hard'],
+    default: 'Medium',
+  },
+  isAiGenerated: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const assessmentSchema = new mongoose.Schema(
@@ -33,14 +52,39 @@ const assessmentSchema = new mongoose.Schema(
     },
     category: {
       type: String,
-      enum: ['aptitude', 'technical'],
+      enum: ['aptitude', 'technical', 'adaptive', 'role_based'],
       required: true,
+      default: 'technical',
     },
     skillTag: {
       type: String,
       trim: true,
       default: 'General',
     },
+    domain: {
+      type: String,
+      trim: true,
+      default: 'Technology & Software',
+    },
+    roleTitle: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    isAdaptive: {
+      type: Boolean,
+      default: false,
+    },
+    stage: {
+      type: Number,
+      default: 1,
+    },
+    targetCompetencies: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
     difficulty: {
       type: String,
       enum: ['Easy', 'Medium', 'Hard'],

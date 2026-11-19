@@ -179,6 +179,15 @@ export const api = {
     return await res.json();
   },
 
+  async matchCustomJobDescription(payload) {
+    const res = await fetch(`${API_BASE}/matching/custom-jd`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify(payload),
+    });
+    return await res.json();
+  },
+
   // Assessments
   async getAssessments(category) {
     const query = category ? `?category=${encodeURIComponent(category)}` : '';
@@ -219,6 +228,43 @@ export const api = {
   async getMyAttempts() {
     const res = await fetch(`${API_BASE}/assessments/attempts`, {
       headers: authHeaders(),
+    });
+    return await res.json();
+  },
+
+  // Dynamic AI Adaptive Assessments & Tutor
+  async startAdaptiveAssessment(payload) {
+    const res = await fetch(`${API_BASE}/assessments/adaptive/start`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify(payload),
+    });
+    return await res.json();
+  },
+
+  async submitAdaptiveAssessment(id, answers) {
+    const res = await fetch(`${API_BASE}/assessments/adaptive/${id}/submit`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ answers }),
+    });
+    return await res.json();
+  },
+
+  async getAdaptiveFollowUp(id, previousAttemptId) {
+    const res = await fetch(`${API_BASE}/assessments/adaptive/${id}/follow-up`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ previousAttemptId }),
+    });
+    return await res.json();
+  },
+
+  async explainMistakeWithTutor(attemptId, questionIndex, userQuery = '') {
+    const res = await fetch(`${API_BASE}/assessments/tutor/explain`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ attemptId, questionIndex, userQuery }),
     });
     return await res.json();
   },

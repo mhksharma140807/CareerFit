@@ -164,3 +164,14 @@
   2. *Weak-Topic Identification*: Mines question-level errors and tags to identify specific conceptual weaknesses (e.g., Recursion, DBMS Normalization).
   3. *Readiness Formula Preservation*: Strictly preserves the documented 60% skill match + 40% assessment readiness formula (ADR-012) and 85% mandatory / 15% preferred job matching formula (ADR-002), supplemented with justified partial matches (e.g. JavaScript for TypeScript).
 - **Rationale**: Delivers authentic academic value and placement preparation diagnostics to students while strictly complying with baseline mathematical formulas agreed in project planning.
+
+## ADR-019: Dynamic Multi-Domain Expansion, AI Intelligence Layer & Custom JD Matching
+- **Date / Milestone**: Phase 4 / AI Platform Expansion
+- **Status**: Approved by Owner & Under Implementation
+- **Decision**: Expand CareerFit into an extensible, domain-independent AI career readiness platform while preserving strict ₹0 budget and viva explainability:
+  1. *Unrestricted Role & Custom JD Matching*: In addition to curated catalog roles, students can paste any raw Job Description (JD) across any professional domain (Tech, Finance, Business, Marketing, Design, HR). The backend extracts mandatory/preferred competencies using Gemini Flash with deterministic fallback and evaluates fit using the approved 85/15 Venn formula.
+  2. *AI Dynamic Question Generation & Small Offline Bank*: Rather than manually authoring thousands of questions across all professions, Gemini generates role- and competency-specific assessment questions, scenario questions, explanations, and interview prompts in batches. A small reviewed offline question bank is maintained for reliable fallback during viva presentation.
+  3. *Simplified Adaptive Assessments*: Evaluates responses, identifies weak competencies, and dynamically requests targeted follow-up question batches from Gemini or offline pools based on performance.
+  4. *Strict ₹0 Budget & Basic Safeguards*: Gemini Flash is used within free-tier limits without billing activation. Usage tracking is managed via MongoDB with graceful fallback to deterministic logic if rate-limited or offline.
+  5. *Preservation of Core Formulas & RBAC*: The 85% mandatory / 15% preferred match formula and the 60% match / 40% assessment readiness formula remain locked and strictly calculated by the backend. The four diagnostic gap dimensions (Skill, Knowledge, Performance, Communication) provide itemized qualitative guidance separate from the readiness score.
+- **Rationale**: Delivers a flexible, high-utility platform suitable for college-wide demonstrations across multiple academic departments while maintaining complete reliability, deterministic grading, and zero financial cost.

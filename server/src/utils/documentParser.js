@@ -201,3 +201,200 @@ export const extractTextFromDocument = async ({ buffer, mimetype = '', originaln
   };
 };
 
+/**
+ * Deterministically parses any raw job description across multiple domains
+ * Identifies requirements, preferred skills, role title, and domain without external AI APIs.
+ */
+export const parseJobDescriptionDeterministic = (rawText = '', hintTitle = '', hintCompany = '') => {
+  const cleaned = cleanDocumentText(rawText);
+  if (!cleaned) {
+    return {
+      domain: 'General',
+      roleTitle: hintTitle || 'Target Role',
+      company: hintCompany || 'Target Employer',
+      mandatorySkills: [],
+      preferredSkills: [],
+      transferableSkills: [],
+      roleSummary: '',
+      extractionSource: 'deterministic',
+    };
+  }
+
+  // 1. Detect Domain from Text Keywords
+  const domainKeywords = {
+    'Technology & Software': [
+      'software', 'developer', 'engineer', 'frontend', 'backend', 'full stack', 'api', 'react', 'node',
+      'python', 'java', 'c++', 'cloud', 'aws', 'docker', 'kubernetes', 'database', 'git', 'devops',
+    ],
+    'Data & Analytics': [
+      'data analyst', 'data science', 'analytics', 'tableau', 'power bi', 'sql', 'pandas', 'statistics',
+      'machine learning', 'bi analyst', 'etl', 'data warehouse', 'quantitative',
+    ],
+    'Finance & Accounting': [
+      'finance', 'financial analyst', 'accounting', 'audit', 'tax', 'balance sheet', 'cash flow', 'valuation',
+      'dcf', 'excel', 'financial modeling', 'gaap', 'reconciliation', 'banking', 'investment',
+    ],
+    'Business & Product': [
+      'product manager', 'apm', 'business analyst', 'roadmap', 'scrum', 'agile', 'prd', 'kpi', 'stakeholder',
+      'strategy', 'operations', 'project manager', 'market research', 'user stories',
+    ],
+    'Marketing & Sales': [
+      'marketing', 'seo', 'sem', 'campaign', 'social media', 'content', 'growth', 'sales', 'lead generation',
+      'crm', 'hubspot', 'conversion rate', 'copywriting', 'b2b', 'roas',
+    ],
+    'Human Resources': [
+      'hr', 'human resources', 'recruiting', 'talent acquisition', 'onboarding', 'payroll', 'employee relations',
+      'sourcing', 'ats', 'interviewing', 'people operations',
+    ],
+    'Design & Creative': [
+      'ui/ux', 'product designer', 'figma', 'wireframe', 'prototype', 'user research', 'graphic design',
+      'adobe', 'photoshop', 'illustrator', 'design system', 'typography',
+    ],
+  };
+
+  const lowerText = cleaned.toLowerCase();
+  let detectedDomain = 'Technology & Software'; // default
+  let highestDomainCount = 0;
+
+  for (const [domainName, keywords] of Object.entries(domainKeywords)) {
+    let count = 0;
+    for (const kw of keywords) {
+      if (lowerText.includes(kw)) count++;
+    }
+    if (count > highestDomainCount) {
+      highestDomainCount = count;
+      detectedDomain = domainName;
+    }
+  }
+
+  // 2. Identify Role Title if not provided
+  let inferredTitle = hintTitle;
+  if (!inferredTitle) {
+    const firstFewLines = cleaned.split('\n').filter((l) => l.trim().length > 3 && l.trim().length < 80);
+    const titleRegex = /(?:job title|role|position|looking for a|hiring a|seeking a)\s*[:\-]?\s*([A-Za-z0-9\s/]+)/i;
+    for (const line of firstFewLines.slice(0, 5)) {
+      const match = line.match(titleRegex);
+      if (match && match[1]) {
+        inferredTitle = match[1].trim();
+        break;
+      }
+    }
+    if (!inferredTitle && firstFewLines.length > 0) {
+      inferredTitle = firstFewLines[0].replace(/[-_#*]/g, '').trim();
+    }
+  }
+
+  // 3. Segment into Mandatory vs. Preferred sections
+  const lines = cleaned.split('\n');
+  const mandatoryLines = [];
+  const preferredLines = [];
+  const generalLines = [];
+
+  let currentSection = 'general';
+
+  const mandatoryHeaderRegex = /^(?:requirements|qualifications|what (?:you'll|you will) need|must have|skills required|basic qualifications|core skills|who you are)/i;
+  const preferredHeaderRegex = /^(?:preferred|nice to have|bonus|good to have|desired qualifications|plus|what sets you apart)/i;
+  const sectionBoundaryRegex = /^[A-Z\s]{3,30}:?$|^(?:about|responsibilities|benefits|perks|compensation|overview|what you'll do)/i;
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+
+    if (preferredHeaderRegex.test(trimmed)) {
+      currentSection = 'preferred';
+      continue;
+    } else if (mandatoryHeaderRegex.test(trimmed)) {
+      currentSection = 'mandatory';
+      continue;
+    } else if (sectionBoundaryRegex.test(trimmed)) {
+      currentSection = 'general';
+    }
+
+    if (currentSection === 'mandatory') {
+      mandatoryLines.push(trimmed);
+    } else if (currentSection === 'preferred') {
+      preferredLines.push(trimmed);
+    } else {
+      generalLines.push(trimmed);
+    }
+  }
+
+  // 4. Extract Skills using universal pattern matching
+  const extractSkillsFromLines = (textList) => {
+    const textBlob = textList.join('\n');
+    const detected = new Set();
+
+    // Universal cross-domain skill dictionary
+    const universalSkills = [
+      // Tech
+      'JavaScript', 'TypeScript', 'Python', 'Java', 'C++', 'C#', '.NET', 'React', 'Node.js', 'Express',
+      'Angular', 'Vue', 'Next.js', 'SQL', 'PostgreSQL', 'MySQL', 'MongoDB', 'Redis', 'Docker', 'Kubernetes',
+      'AWS', 'Azure', 'GCP', 'Git', 'Linux', 'REST APIs', 'GraphQL', 'HTML5', 'CSS3', 'Tailwind CSS',
+      // Data
+      'Pandas', 'NumPy', 'Tableau', 'Power BI', 'Excel', 'Statistics', 'R', 'Machine Learning', 'Data Modeling',
+      // Business & Product
+      'Product Strategy', 'Agile', 'Scrum', 'Jira', 'User Research', 'Wireframing', 'PRD Writing', 'A/B Testing',
+      'Roadmap Planning', 'Stakeholder Management', 'Market Research', 'KPI Analysis',
+      // Finance
+      'Financial Modeling', 'DCF Valuation', 'Budgeting', 'Financial Reporting', 'Forecasting', 'Variance Analysis',
+      'Cash Flow', 'Internal Controls', 'Auditing', 'GAAP', 'QuickBooks', 'SAP',
+      // Marketing
+      'SEO', 'SEM', 'Google Analytics', 'Content Marketing', 'Social Media Marketing', 'Copywriting',
+      'Email Marketing', 'Brand Strategy', 'PPC Advertising', 'HubSpot', 'Conversion Optimization',
+      // HR
+      'Talent Acquisition', 'Full-Cycle Recruiting', 'Onboarding', 'Employee Engagement', 'HRIS', 'ATS',
+      'Labor Laws', 'Performance Management', 'Structured Interviewing',
+      // Design
+      'Figma', 'UI/UX Design', 'User Personas', 'Information Architecture', 'Usability Testing', 'Adobe Creative Suite',
+      // Transferable
+      'Communication', 'Problem Solving', 'Leadership', 'Critical Thinking', 'Team Collaboration', 'Time Management',
+    ];
+
+    universalSkills.forEach((skill) => {
+      // Escape punctuation for safe regex
+      const escaped = skill.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+      const regex = new RegExp(`(?:^|[\\s,;•/\\(])${escaped}(?:$|[\\s,;•/\\).!?:])`, 'i');
+      if (regex.test(textBlob)) {
+        detected.add(skill);
+      }
+    });
+
+    return Array.from(detected);
+  };
+
+  let mandatorySkills = extractSkillsFromLines(mandatoryLines.length > 0 ? mandatoryLines : generalLines);
+  let preferredSkills = extractSkillsFromLines(preferredLines);
+
+  // If no separation found, split top 60% as mandatory, rest as preferred
+  if (preferredSkills.length === 0 && mandatorySkills.length > 5) {
+    const all = [...mandatorySkills];
+    const cutoff = Math.ceil(all.length * 0.65);
+    mandatorySkills = all.slice(0, cutoff);
+    preferredSkills = all.slice(cutoff);
+  } else if (mandatorySkills.length === 0 && generalLines.length > 0) {
+    const all = extractSkillsFromLines(generalLines);
+    const cutoff = Math.ceil(all.length * 0.7);
+    mandatorySkills = all.slice(0, cutoff);
+    preferredSkills = all.slice(cutoff);
+  }
+
+  // De-duplicate: preferred skills shouldn't duplicate mandatory
+  preferredSkills = preferredSkills.filter((p) => !mandatorySkills.includes(p));
+
+  // Extract transferable soft skills
+  const transferableKeywords = ['Communication', 'Problem Solving', 'Leadership', 'Critical Thinking', 'Team Collaboration', 'Time Management'];
+  const transferableSkills = mandatorySkills.filter((s) => transferableKeywords.includes(s));
+
+  return {
+    domain: detectedDomain,
+    roleTitle: inferredTitle || 'Custom Career Opportunity',
+    company: hintCompany || 'Target Employer',
+    mandatorySkills,
+    preferredSkills,
+    transferableSkills,
+    roleSummary: cleaned.slice(0, 240).replace(/\n+/g, ' ') + '...',
+    extractionSource: 'deterministic',
+  };
+};
+
+

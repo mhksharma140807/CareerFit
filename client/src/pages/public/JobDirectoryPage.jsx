@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import Skeleton from '../../components/Skeleton';
+import CustomJdMatcher from '../../components/CustomJdMatcher';
 import {
   Briefcase,
   Search,
@@ -29,6 +30,7 @@ export default function JobDirectoryPage() {
   const [search, setSearch] = useState('');
   const [experienceLevel, setExperienceLevel] = useState('');
   const [jobType, setJobType] = useState('');
+  const [activeTab, setActiveTab] = useState('catalog');
 
   const [savedJobIds, setSavedJobIds] = useState(new Set());
 
@@ -101,75 +103,113 @@ export default function JobDirectoryPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8">
-      {/* Search Header Container */}
-      <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-brand-100/70 dark:border-brand-900/30">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <div className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-600 dark:text-brand-400 mb-1">
-              <Sparkles className="w-4 h-4" />
-              <span>Campus Recruitment Database</span>
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-              Job Requirements Directory
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-              Browse target roles, evaluate your Venn skill match, and identify mandatory requirements.
-            </p>
-          </div>
+      {/* Mode Switcher Tabs */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center gap-1.5 p-1.5 rounded-2xl bg-slate-100 dark:bg-obsidian-900 border border-slate-200/80 dark:border-white/5">
+          <button
+            type="button"
+            onClick={() => setActiveTab('catalog')}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
+              activeTab === 'catalog'
+                ? 'bg-white dark:bg-obsidian-800 text-brand-700 dark:text-brand-300 shadow-sm'
+                : 'text-slate-500 hover:text-slate-800 dark:hover:text-white'
+            }`}
+          >
+            <Briefcase className="w-4 h-4" />
+            <span>Curated Campus Roles</span>
+          </button>
 
-          {isAuthenticated && (
-            <Link
-              to="/saved-jobs"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold bg-white dark:bg-obsidian-800 text-brand-700 dark:text-brand-300 border border-brand-200/80 dark:border-brand-800/40 hover:bg-brand-50/50 shadow-xs transition"
-            >
-              <Bookmark className="w-4 h-4 text-brand-600" />
-              <span>Saved Jobs ({savedJobIds.size})</span>
-            </Link>
-          )}
+          <button
+            type="button"
+            onClick={() => setActiveTab('custom')}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
+              activeTab === 'custom'
+                ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md shadow-brand-500/25'
+                : 'text-slate-500 hover:text-slate-800 dark:hover:text-white'
+            }`}
+          >
+            <Sparkles className="w-4 h-4" />
+            <span>Analyze Custom Job Description</span>
+            <span className="px-1.5 py-0.5 rounded-md text-[9px] uppercase tracking-wider bg-white/20 font-extrabold hidden sm:inline">
+              Any Domain
+            </span>
+          </button>
         </div>
 
-        {/* Filter Controls */}
-        <form onSubmit={handleSearchSubmit} className="mt-6 grid grid-cols-1 sm:grid-cols-12 gap-3">
-          <div className="sm:col-span-6 relative">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
-            <input
-              type="text"
-              placeholder="Search by job title, company, or tech stack (e.g. React, C++, Node.js)..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 text-xs border border-slate-200 dark:border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 bg-white/80 dark:bg-obsidian-900 text-slate-800 dark:text-slate-100 placeholder-slate-400"
-            />
-          </div>
-
-          <div className="sm:col-span-3">
-            <select
-              value={experienceLevel}
-              onChange={(e) => setExperienceLevel(e.target.value)}
-              className="w-full px-3.5 py-2.5 text-xs border border-slate-200 dark:border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 bg-white dark:bg-obsidian-900 text-slate-800 dark:text-slate-100"
-            >
-              <option value="">All Experience Levels</option>
-              <option value="Fresher">Fresher / Campus</option>
-              <option value="Junior">Junior (0-2 Yrs)</option>
-              <option value="Mid">Mid Level (2-4 Yrs)</option>
-              <option value="Senior">Senior</option>
-            </select>
-          </div>
-
-          <div className="sm:col-span-3">
-            <select
-              value={jobType}
-              onChange={(e) => setJobType(e.target.value)}
-              className="w-full px-3.5 py-2.5 text-xs border border-slate-200 dark:border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 bg-white dark:bg-obsidian-900 text-slate-800 dark:text-slate-100"
-            >
-              <option value="">All Job Types</option>
-              <option value="Full-time">Full-time</option>
-              <option value="Internship">Internship</option>
-              <option value="Part-time">Part-time</option>
-              <option value="Contract">Contract</option>
-            </select>
-          </div>
-        </form>
+        {isAuthenticated && (
+          <Link
+            to="/saved-jobs"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold bg-white dark:bg-obsidian-850 text-brand-700 dark:text-brand-300 border border-brand-200/80 dark:border-brand-800/40 hover:bg-brand-50/50 shadow-xs transition"
+          >
+            <Bookmark className="w-4 h-4 text-brand-600" />
+            <span>Saved Jobs ({savedJobIds.size})</span>
+          </Link>
+        )}
       </div>
+
+      {activeTab === 'custom' ? (
+        <CustomJdMatcher />
+      ) : (
+        <>
+          {/* Search Header Container */}
+          <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-brand-100/70 dark:border-brand-900/30">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <div className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-600 dark:text-brand-400 mb-1">
+                  <Sparkles className="w-4 h-4" />
+                  <span>Campus Recruitment Database</span>
+                </div>
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                  Job Requirements Directory
+                </h1>
+                <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+                  Browse target roles, evaluate your Venn skill match, and identify mandatory requirements.
+                </p>
+              </div>
+            </div>
+
+            {/* Filter Controls */}
+            <form onSubmit={handleSearchSubmit} className="mt-6 grid grid-cols-1 sm:grid-cols-12 gap-3">
+              <div className="sm:col-span-6 relative">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                <input
+                  type="text"
+                  placeholder="Search by job title, company, or tech stack (e.g. React, C++, Node.js)..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 text-xs border border-slate-200 dark:border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 bg-white/80 dark:bg-obsidian-900 text-slate-800 dark:text-slate-100 placeholder-slate-400"
+                />
+              </div>
+
+              <div className="sm:col-span-3">
+                <select
+                  value={experienceLevel}
+                  onChange={(e) => setExperienceLevel(e.target.value)}
+                  className="w-full px-3.5 py-2.5 text-xs border border-slate-200 dark:border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 bg-white dark:bg-obsidian-900 text-slate-800 dark:text-slate-100"
+                >
+                  <option value="">All Experience Levels</option>
+                  <option value="Fresher">Fresher / Campus</option>
+                  <option value="Junior">Junior (0-2 Yrs)</option>
+                  <option value="Mid">Mid Level (2-4 Yrs)</option>
+                  <option value="Senior">Senior</option>
+                </select>
+              </div>
+
+              <div className="sm:col-span-3">
+                <select
+                  value={jobType}
+                  onChange={(e) => setJobType(e.target.value)}
+                  className="w-full px-3.5 py-2.5 text-xs border border-slate-200 dark:border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 bg-white dark:bg-obsidian-900 text-slate-800 dark:text-slate-100"
+                >
+                  <option value="">All Job Types</option>
+                  <option value="Full-time">Full-time</option>
+                  <option value="Internship">Internship</option>
+                  <option value="Part-time">Part-time</option>
+                  <option value="Contract">Contract</option>
+                </select>
+              </div>
+            </form>
+          </div>
 
       {/* Error state */}
       {error && (
@@ -287,6 +327,8 @@ export default function JobDirectoryPage() {
             );
           })}
         </div>
+      )}
+        </>
       )}
     </div>
   );

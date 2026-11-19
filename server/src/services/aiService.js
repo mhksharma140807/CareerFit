@@ -263,3 +263,218 @@ Generate 3-5 high-priority, realistic improvement tasks and recommendations for 
   };
 };
 
+/**
+ * Analyzes any raw job description (across any domain) using Gemini Flash
+ * Redacts PII, normalizes skills into mandatory vs preferred, and identifies domain.
+ */
+export const analyzeJobDescriptionWithGemini = async (rawText = '', hintTitle = '', hintCompany = '') => {
+  if (!isGeminiConfigured() || !rawText || rawText.trim().length < 20) {
+    return null;
+  }
+
+  const safeText = redactPII(rawText);
+
+  const systemInstruction = `You are an expert talent acquisition and career readiness analyzer.
+Your task is to analyze ANY industry job description across technology, finance, business, marketing, design, human resources, or data domains.
+Return a strictly valid JSON object.
+Categorize competencies into mandatory (must have/required) and preferred (nice to have/plus) skills.
+Normalize skill names cleanly into canonical professional terms (e.g., "Financial Modeling", "React", "SEO", "SQL", "PRD Writing").
+Identify the overarching domain, title, and concise summary.
+
+Required JSON output schema:
+{
+  "domain": "Technology & Software | Data & Analytics | Finance & Accounting | Business & Product | Marketing & Sales | Human Resources | Design & Creative | General",
+  "roleTitle": "string",
+  "mandatorySkills": ["string"],
+  "preferredSkills": ["string"],
+  "transferableSkills": ["string"],
+  "experienceLevel": "Fresher | Junior | Mid | Senior",
+  "roleSummary": "string",
+  "keyAdvice": "string"
+}`;
+
+  const prompt = `Please analyze the following job description:
+Title Hint: ${hintTitle || 'Not specified'}
+Company Hint: ${hintCompany || 'Not specified'}
+---
+${safeText.slice(0, 5000)}
+---`;
+
+  const res = await callGeminiApi({ systemInstruction, prompt, timeoutMs: 12000 });
+
+  if (!res.success || !res.data) {
+    return null;
+  }
+
+  const data = res.data;
+  if (!Array.isArray(data.mandatorySkills)) {
+    return null;
+  }
+
+  return {
+    domain: typeof data.domain === 'string' ? data.domain : 'General',
+    roleTitle: typeof data.roleTitle === 'string' ? data.roleTitle : (hintTitle || 'Custom Target Role'),
+    company: hintCompany || 'Target Employer',
+    mandatorySkills: data.mandatorySkills.filter((s) => typeof s === 'string' && s.trim()),
+    preferredSkills: Array.isArray(data.preferredSkills) ? data.preferredSkills.filter((s) => typeof s === 'string' && s.trim()) : [],
+    transferableSkills: Array.isArray(data.transferableSkills) ? data.transferableSkills.filter((s) => typeof s === 'string' && s.trim()) : [],
+    experienceLevel: typeof data.experienceLevel === 'string' ? data.experienceLevel : 'Fresher',
+    roleSummary: typeof data.roleSummary === 'string' ? data.roleSummary : '',
+    keyAdvice: typeof data.keyAdvice === 'string' ? data.keyAdvice : '',
+    extractionSource: 'ai',
+    modelUsed: getGeminiModel(),
+  };
+};
+
+/**
+ * Generates a batch of high-quality, role- and competency-specific assessment questions using Gemini Flash
+ */
+export const generateAssessmentQuestionsWithGemini = async ({
+  roleTitle = 'Software Engineer',
+  domain = 'Technology & Software',
+  competencies = ['General'],
+  weakCompetencies = [],
+  difficulty = 'Medium',
+  count = 8,
+}) => {
+  if (!isGeminiConfigured()) {
+    return null;
+  }
+
+  const systemInstruction = `You are a senior recruitment evaluator and academic assessment examiner.
+Your task is to generate realistic, practical multiple-choice assessment questions (MCQs) evaluating specific competencies for a target job role.
+Return a strictly valid JSON object with an array of "questions".
+Every question MUST have:
+1. "questionText": Clear, unambiguous question or realistic application scenario.
+2. "options": An array of EXACTLY 4 distinct, plausible options.
+3. "correctIndex": Integer (0, 1, 2, or 3) indicating the single unambiguously correct option.
+4. "competency": The primary competency evaluated (e.g., "React", "SQL", "Financial Modeling").
+5. "topic": Specific sub-topic (e.g., "Hooks Lifecycle", "Window Functions", "DCF Valuation").
+6. "difficulty": "Easy", "Medium", or "Hard".
+7. "explanation": 1-2 sentence concise explanation of why the correct option is right.
+
+Output schema:
+{
+  "questions": [
+    {
+      "questionText": "string",
+      "options": ["string", "string", "string", "string"],
+      "correctIndex": 0,
+      "competency": "string",
+      "topic": "string",
+      "difficulty": "Easy | Medium | Hard",
+      "explanation": "string"
+    }
+  ]
+}`;
+
+  const prompt = `Target Role: ${roleTitle}
+Domain: ${domain}
+Target Competencies: ${competencies.join(', ')}
+${weakCompetencies.length > 0 ? `Priority Weak Competencies to Target: ${weakCompetencies.join(', ')}` : ''}
+Target Overall Difficulty: ${difficulty}
+Number of Questions to Generate: ${count}
+
+Generate ${count} high-quality, objective assessment questions directly assessing these competencies.`;
+
+  const res = await callGeminiApi({ systemInstruction, prompt, timeoutMs: 14000 });
+
+  if (!res.success || !res.data || !Array.isArray(res.data.questions)) {
+    return null;
+  }
+
+  // Strictly validate each generated question
+  const validQuestions = [];
+  for (const q of res.data.questions) {
+    if (
+      typeof q.questionText === 'string' &&
+      q.questionText.trim().length >= 15 &&
+      Array.isArray(q.options) &&
+      q.options.length === 4 &&
+      q.options.every((opt) => typeof opt === 'string' && opt.trim().length > 0) &&
+      Number.isInteger(q.correctIndex) &&
+      q.correctIndex >= 0 &&
+      q.correctIndex <= 3
+    ) {
+      validQuestions.push({
+        questionText: q.questionText.trim(),
+        options: q.options.map((opt) => opt.trim()),
+        correctIndex: q.correctIndex,
+        competency: typeof q.competency === 'string' ? q.competency.trim() : (competencies[0] || 'General'),
+        topic: typeof q.topic === 'string' ? q.topic.trim() : 'General',
+        difficulty: ['Easy', 'Medium', 'Hard'].includes(q.difficulty) ? q.difficulty : difficulty,
+        explanation: typeof q.explanation === 'string' ? q.explanation.trim() : '',
+        isAiGenerated: true,
+      });
+    }
+  }
+
+  if (validQuestions.length === 0) {
+    return null;
+  }
+
+  return {
+    questions: validQuestions,
+    source: 'ai',
+    modelUsed: getGeminiModel(),
+  };
+};
+
+/**
+ * Explains a missed question and answers student follow-up queries using Gemini Flash
+ */
+export const explainMistakeWithGemini = async ({
+  questionText,
+  options = [],
+  selectedOption,
+  correctOption,
+  explanation = '',
+  competency = 'General',
+  userQuery = '',
+}) => {
+  if (!isGeminiConfigured()) {
+    return null;
+  }
+
+  const selectedText = options[selectedOption] || 'None';
+  const correctText = options[correctOption] || 'None';
+
+  const systemInstruction = `You are a supportive, expert AI Career & Technical Tutor.
+Your goal is to help a student understand why an assessment question was answered incorrectly and clarify the core underlying concept.
+Be clear, pedagogical, concise, and encouraging. Focus on first principles and practical placement relevance.
+Return a valid JSON object.
+
+Output schema:
+{
+  "conceptOverview": "string",
+  "whySelectedWasIncorrect": "string",
+  "whyCorrectIsRight": "string",
+  "keyTakeaway": "string",
+  "suggestedPractice": "string"
+}`;
+
+  const prompt = `Competency: ${competency}
+Question: ${questionText}
+Options:
+${options.map((opt, i) => `${String.fromCharCode(65 + i)}) ${opt}`).join('\n')}
+
+Student Choice: ${selectedText}
+Correct Choice: ${correctText}
+Standard Explanation: ${explanation}
+
+${userQuery ? `Student's Specific Question / Doubt: "${userQuery}"` : 'Please explain the core concept, why the selected choice was wrong, and how to approach this problem type in placements.'}`;
+
+  const res = await callGeminiApi({ systemInstruction, prompt, timeoutMs: 12000 });
+
+  if (!res.success || !res.data) {
+    return null;
+  }
+
+  return {
+    ...res.data,
+    source: 'ai',
+  };
+};
+
+
+

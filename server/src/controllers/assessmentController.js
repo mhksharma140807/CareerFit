@@ -1,6 +1,12 @@
 import { Assessment } from '../models/Assessment.js';
 import { AssessmentAttempt } from '../models/AssessmentAttempt.js';
 import { triggerNotification } from '../utils/notificationHelper.js';
+import {
+  createAdaptiveSession,
+  evaluateAdaptiveSession,
+  createAdaptiveFollowUp,
+  explainQuestionMistake,
+} from '../services/adaptiveAssessmentService.js';
 
 export const getAssessments = async (req, res, next) => {
   try {
@@ -104,6 +110,8 @@ export const startAssessment = async (req, res, next) => {
       id: q._id,
       questionText: q.questionText,
       options: q.options,
+      competency: q.competency || 'General',
+      difficulty: q.difficulty || assessment.difficulty || 'Medium',
     }));
 
     res.json({
@@ -113,6 +121,11 @@ export const startAssessment = async (req, res, next) => {
         title: assessment.title,
         category: assessment.category,
         skillTag: assessment.skillTag,
+        domain: assessment.domain,
+        roleTitle: assessment.roleTitle,
+        isAdaptive: Boolean(assessment.isAdaptive),
+        stage: assessment.stage || 1,
+        targetCompetencies: assessment.targetCompetencies || [],
         difficulty: assessment.difficulty,
         durationMinutes: assessment.durationMinutes,
         totalQuestions: questionsWithoutAnswers.length,
@@ -241,4 +254,100 @@ export const getMyAttempts = async (req, res, next) => {
     next(error);
   }
 };
+
+/**
+ * Initializes a dynamic AI-assisted adaptive assessment session
+ */
+export const startAdaptiveAssessment = async (req, res, next) => {
+  try {
+    const { roleTitle, domain, competencies, customJdText } = req.body;
+    const session = await createAdaptiveSession({
+      userId: req.user._id,
+      roleTitle,
+      domain,
+      competencies,
+      customJdText,
+    });
+
+    res.status(201).json({
+      success: true,
+      data: session,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Evaluates an adaptive assessment attempt and identifies weak competencies
+ */
+export const submitAdaptiveAssessment = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { answers = [] } = req.body;
+
+    const evaluation = await evaluateAdaptiveSession({
+      assessmentId: id,
+      userId: req.user._id,
+      answers,
+    });
+
+    res.status(201).json({
+      success: true,
+      data: evaluation,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Generates an adaptive Stage 2 targeted follow-up batch focusing on weak competencies
+ */
+export const getAdaptiveFollowUp = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const previousAttemptId = req.body.previousAttemptId || req.body.attemptId;
+
+    const followUpSession = await createAdaptiveFollowUp({
+      assessmentId: id,
+      userId: req.user._id,
+      previousAttemptId,
+    });
+
+    res.status(201).json({
+      success: true,
+      data: followUpSession,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Explains an assessment mistake and answers student doubts using AI Tutor
+ */
+export const explainMistakeWithTutor = async (req, res, next) => {
+  try {
+    const { attemptId, questionIndex, userQuery } = req.body;
+
+    if (!attemptId || questionIndex === undefined) {
+      return res.status(400).json({
+        success: false,
+        error: 'attemptId and questionIndex are required.',
+      });
+    }
+
+    const explanationResult = await explainQuestionMistake({
+      attemptId,
+      questionIndex,
+      userQuery,
+    });
+
+    res.json(explanationResult);
+  } catch (error) {
+    next(error);
+  }
+};
+
 

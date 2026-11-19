@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../../services/api';
+import AdaptiveAssessmentLauncher from '../../components/AdaptiveAssessmentLauncher';
 import {
   Award,
   Clock,
@@ -107,6 +108,9 @@ export default function AssessmentCenterPage() {
           <span>My Performance History</span>
         </Link>
       </div>
+
+      {/* AI Dynamic Adaptive Assessment Launcher */}
+      <AdaptiveAssessmentLauncher />
 
       {/* Category Tabs */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 border-b border-slate-200 dark:border-obsidian-800">

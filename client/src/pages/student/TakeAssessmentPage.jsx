@@ -16,6 +16,7 @@ export default function TakeAssessmentPage() {
   const { id } = useParams();
   const navigate = useNavigate();
 
+  const [activeId, setActiveId] = useState(id);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [assessment, setAssessment] = useState(null);
@@ -27,10 +28,13 @@ export default function TakeAssessmentPage() {
   const [timeLeft, setTimeLeft] = useState(0); // in seconds
   const [submitting, setSubmitting] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [adaptiveStageInfo, setAdaptiveStageInfo] = useState(null);
+  const [loadingFollowUp, setLoadingFollowUp] = useState(false);
 
   const timerRef = useRef(null);
 
   useEffect(() => {
+    setActiveId(id);
     const startTest = async () => {
       try {
         setLoading(true);
@@ -110,11 +114,23 @@ export default function TakeAssessmentPage() {
         };
       });
 
-      const res = await api.submitAssessment(id, answersPayload);
+      const targetAssessmentId = activeId || id;
+      const isAdaptiveTest = assessment?.isAdaptive || assessment?.category === 'adaptive';
+      const res = isAdaptiveTest
+        ? await api.submitAdaptiveAssessment(targetAssessmentId, answersPayload)
+        : await api.submitAssessment(targetAssessmentId, answersPayload);
+
       const attemptId = res.data?._id || res.data?.attemptId;
 
       if (res.success && attemptId) {
-        navigate(`/assessments/attempts/${attemptId}`);
+        if (res.data?.canTakeFollowUp) {
+          // Pause timer and present Stage 2 follow-up option
+          clearInterval(timerRef.current);
+          setAdaptiveStageInfo(res.data);
+          setSubmitting(false);
+        } else {
+          navigate(`/assessments/attempts/${attemptId}`);
+        }
       } else {
         setError(res.error || res.message || 'Failed to submit assessment answers');
         setSubmitting(false);
@@ -122,6 +138,36 @@ export default function TakeAssessmentPage() {
     } catch (err) {
       setError(err.message || 'Error submitting test');
       setSubmitting(false);
+    }
+  };
+
+  const handleContinueToStage2 = async () => {
+    if (!adaptiveStageInfo) return;
+    try {
+      setLoadingFollowUp(true);
+      const res = await api.getAdaptiveFollowUp(activeId || id, adaptiveStageInfo.attemptId);
+      if (res.success && res.data) {
+        if (res.data.assessmentId) {
+          setActiveId(res.data.assessmentId);
+        }
+        setAssessment((prev) => ({
+          ...prev,
+          _id: res.data.assessmentId || prev?._id,
+          title: res.data.title,
+          stage: 2,
+        }));
+        setQuestions(res.data.questions || []);
+        setCurrentIndex(0);
+        setAnswers({});
+        setTimeLeft((res.data.durationMinutes || 10) * 60);
+        setAdaptiveStageInfo(null);
+      } else {
+        setError(res.error || 'Failed to generate Stage 2 follow-up batch.');
+      }
+    } catch (err) {
+      setError(err.message || 'Error loading follow-up batch');
+    } finally {
+      setLoadingFollowUp(false);
     }
   };
 
@@ -192,10 +238,22 @@ export default function TakeAssessmentPage() {
         {/* Question Area (3 cols) */}
         <div className="lg:col-span-3 glass-card border border-slate-200/80 dark:border-obsidian-750/70 rounded-3xl p-6 sm:p-8 shadow-sm flex flex-col justify-between min-h-[460px]">
           <div className="space-y-6">
-            <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-obsidian-800 pb-3">
-              <span className="font-bold text-slate-900 dark:text-white">
-                Question {currentIndex + 1} of {questions.length}
-              </span>
+            <div className="flex flex-wrap items-center justify-between text-xs text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-obsidian-800 pb-3 gap-2">
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-slate-900 dark:text-white">
+                  Question {currentIndex + 1} of {questions.length}
+                </span>
+                {currentQ.competency && currentQ.competency !== 'General' && (
+                  <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-brand-500/10 text-brand-700 dark:text-brand-300 border border-brand-500/20">
+                    {currentQ.competency}
+                  </span>
+                )}
+                {currentQ.difficulty && (
+                  <span className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-slate-100 dark:bg-obsidian-800 text-slate-500">
+                    {currentQ.difficulty}
+                  </span>
+                )}
+              </div>
               <span>
                 Status:{' '}
                 {answers[currentQKey] !== undefined ? (
@@ -383,6 +441,79 @@ export default function TakeAssessmentPage() {
                 className="px-5 py-2 bg-gradient-to-r from-brand-600 to-electric-600 text-white text-xs font-bold rounded-xl transition shadow-md"
               >
                 {submitting ? 'Evaluating...' : 'Yes, Submit'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Adaptive Stage 1 Completion / Follow-Up Modal */}
+      {adaptiveStageInfo && (
+        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="glass-card bg-white dark:bg-obsidian-900 rounded-3xl max-w-md w-full p-6 sm:p-8 space-y-5 shadow-2xl border border-brand-500/30 animate-fadeIn">
+            <div className="w-14 h-14 rounded-2xl bg-brand-500/15 text-brand-600 dark:text-brand-400 flex items-center justify-center border border-brand-500/25">
+              <Sparkles className="w-7 h-7" />
+            </div>
+
+            <div>
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-brand-100 dark:bg-brand-950/70 text-brand-800 dark:text-brand-300 border border-brand-200/80 dark:border-brand-800/40">
+                Adaptive Stage 1 Complete
+              </span>
+              <h3 className="text-lg font-extrabold text-slate-900 dark:text-white mt-1.5">
+                Initial Competencies Evaluated
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                You scored <strong className="text-slate-900 dark:text-white">{adaptiveStageInfo.percentage}%</strong> ({adaptiveStageInfo.score}/{adaptiveStageInfo.totalQuestions}) on the initial question batch.
+              </p>
+            </div>
+
+            {adaptiveStageInfo.weakCompetencies?.length > 0 && (
+              <div className="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-900/30 space-y-2">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-amber-800 dark:text-amber-300">
+                  <AlertTriangle className="w-4 h-4 text-amber-600" />
+                  <span>Targeted Remediation Opportunity:</span>
+                </div>
+                <p className="text-[11px] text-amber-700 dark:text-amber-300">
+                  CareerFit detected weak performance in:
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {adaptiveStageInfo.weakCompetencies.map((wc) => (
+                    <span
+                      key={wc}
+                      className="px-2 py-0.5 rounded-lg text-xs font-bold bg-white dark:bg-obsidian-900 text-amber-800 dark:text-amber-200 border border-amber-300 dark:border-amber-800"
+                    >
+                      {wc}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="flex flex-col sm:flex-row items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => navigate(`/assessments/attempts/${adaptiveStageInfo.attemptId}`)}
+                className="w-full sm:w-auto px-4 py-2.5 bg-slate-100 dark:bg-obsidian-800 hover:bg-slate-200 dark:hover:bg-obsidian-750 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-xl transition"
+              >
+                Finish & View Results
+              </button>
+              <button
+                type="button"
+                disabled={loadingFollowUp}
+                onClick={handleContinueToStage2}
+                className="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white text-xs font-bold rounded-xl transition shadow-md shadow-brand-500/25 flex items-center justify-center gap-2"
+              >
+                {loadingFollowUp ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Generating Stage 2 Batch...</span>
+                  </>
+                ) : (
+                  <>
+                    <Zap className="w-4 h-4" />
+                    <span>Proceed to Stage 2 (Remediation)</span>
+                  </>
+                )}
               </button>
             </div>
           </div>
