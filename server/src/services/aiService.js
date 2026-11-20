@@ -18,7 +18,7 @@ export const getGeminiModel = () => {
 /**
  * Helper to call Gemini REST API securely with timeout and error handling
  */
-const callGeminiApi = async ({ systemInstruction, prompt, timeoutMs = 12000 }) => {
+export const callGeminiApi = async ({ systemInstruction, prompt, timeoutMs = 12000 }) => {
   if (!isGeminiConfigured()) {
     return { success: false, reason: 'unconfigured' };
   }
@@ -472,6 +472,185 @@ ${userQuery ? `Student's Specific Question / Doubt: "${userQuery}"` : 'Please ex
 
   return {
     ...res.data,
+    source: 'ai',
+  };
+};
+
+/**
+ * Generates a realistic workplace communication scenario tailored to domain and role
+ */
+export const generateCommunicationScenarioWithGemini = async ({
+  roleTitle = 'Professional',
+  domain = 'General Business & Technology',
+  experienceLevel = 'Entry-to-Mid',
+  customJdText = '',
+  category = 'client_stakeholder',
+}) => {
+  if (!isGeminiConfigured()) {
+    return null;
+  }
+
+  const systemInstruction = `You are an expert executive communication coach and workplace simulation designer.
+Generate a realistic, immersive, challenging workplace written communication scenario.
+The user must write a professional response (e.g. Email, Executive Brief, Incident Report, Slack / Team Update, Memo).
+Never simulate spoken voice, speech, or video. This is strictly a professional written assessment.
+Return a strict JSON object.
+
+Output JSON schema:
+{
+  "title": "string (engaging scenario title)",
+  "domain": "string",
+  "roleTitle": "string",
+  "category": "client_stakeholder | project_decision | workplace_conflict | status_update | problem_solution",
+  "format": "Email | Executive Brief | Incident Report | Slack / Team Update | Memo",
+  "recipient": "string (e.g. VP of Product, Lead Client Director, Project Manager)",
+  "difficulty": "Easy | Medium | Hard",
+  "context": "string (detailed realistic background, 2-4 sentences explaining the business context, dilemma, or trigger)",
+  "prompt": "string (clear instructions outlining what the user must draft and specific questions to address)",
+  "constraints": {
+    "minWords": 60,
+    "maxWords": 320,
+    "requiredElements": ["string", "string", "string"]
+  }
+}`;
+
+  const prompt = `Generate a realistic professional communication scenario:
+Target Role: ${roleTitle}
+Industry Domain: ${domain}
+Experience Level: ${experienceLevel}
+Scenario Category: ${category}
+${customJdText ? `Context from Target Job Description: "${customJdText.slice(0, 600)}"` : ''}
+
+Ensure the scenario feels authentic to real-world corporate / workplace challenges and demands critical thinking, diplomatic tone, and clear actionability.`;
+
+  const res = await callGeminiApi({ systemInstruction, prompt, timeoutMs: 14000 });
+
+  if (!res.success || !res.data) {
+    return null;
+  }
+
+  const d = res.data;
+  if (!d.title || !d.context || !d.prompt) {
+    return null;
+  }
+
+  return {
+    ...d,
+    domain: d.domain || domain,
+    roleTitle: d.roleTitle || roleTitle,
+    format: ['Email', 'Executive Brief', 'Incident Report', 'Slack / Team Update', 'Memo'].includes(d.format)
+      ? d.format
+      : 'Email',
+    difficulty: ['Easy', 'Medium', 'Hard'].includes(d.difficulty) ? d.difficulty : 'Medium',
+    constraints: {
+      minWords: Number(d.constraints?.minWords) || 60,
+      maxWords: Number(d.constraints?.maxWords) || 320,
+      requiredElements: Array.isArray(d.constraints?.requiredElements) && d.constraints.requiredElements.length > 0
+        ? d.constraints.requiredElements
+        : ['Clear situation analysis', 'Concrete mitigation or proposal', 'Definite timeline / next steps'],
+    },
+    isAiGenerated: true,
+  };
+};
+
+/**
+ * Evaluates a student's written response against the 8-dimension professional communication rubric
+ */
+export const evaluateCommunicationResponseWithGemini = async ({ scenario, userResponse }) => {
+  if (!isGeminiConfigured() || !userResponse || typeof userResponse !== 'string') {
+    return null;
+  }
+
+  const systemInstruction = `You are a rigorous, fair corporate communications director and executive writing coach.
+Evaluate the candidate's written response to the workplace scenario across exactly 8 dimensions on a 0 to 10 scale (where 10 is flawless executive standard, 7-8 is solid professional standard, 5-6 is competent but needs polish, and <5 is inadequate or unprofessional):
+
+1. clarity (0-10): Clear expression, absence of ambiguity or vagueness.
+2. structure (0-10): Professional greeting/opening, logical body paragraphs, clean closing/sign-off.
+3. professionalTone (0-10): Courteous, calm, objective, constructive tone.
+4. relevance (0-10): Directly addresses prompt and scenario constraints.
+5. conciseness (0-10): High information density without fluff, filler words, or rambling.
+6. grammar (0-10): Correct grammar, punctuation, spelling, and sentence syntax.
+7. problemFraming (0-10): Accurate characterization of the problem, showing mature commercial or technical grasp.
+8. actionability (0-10): Clear next steps, owners, deadlines, or actionable recommendations.
+
+Calculate overallScore as the average of the 8 scores multiplied by 10 (rounded to nearest integer, 0-100).
+Provide 2-3 specific strengths, 2-3 specific improvement areas, and write an exemplary 'suggestedRewrite' demonstrating how a top professional would write this response within the format and word count.
+
+Return a strict JSON object matching this schema:
+{
+  "overallScore": number (0-100),
+  "dimensionScores": {
+    "clarity": { "score": number, "feedback": "string" },
+    "structure": { "score": number, "feedback": "string" },
+    "professionalTone": { "score": number, "feedback": "string" },
+    "relevance": { "score": number, "feedback": "string" },
+    "conciseness": { "score": number, "feedback": "string" },
+    "grammar": { "score": number, "feedback": "string" },
+    "problemFraming": { "score": number, "feedback": "string" },
+    "actionability": { "score": number, "feedback": "string" }
+  },
+  "strengths": ["string", "string"],
+  "improvementAreas": ["string", "string"],
+  "suggestedRewrite": "string"
+}`;
+
+  const prompt = `SCENARIO TITLE: ${scenario.title}
+FORMAT: ${scenario.format || 'Email'}
+TARGET RECIPIENT: ${scenario.recipient || 'Stakeholder'}
+ROLE & DOMAIN: ${scenario.roleTitle || 'Professional'} (${scenario.domain || 'General'})
+SCENARIO CONTEXT: ${scenario.context}
+TASK PROMPT: ${scenario.prompt}
+REQUIRED ELEMENTS: ${(scenario.constraints?.requiredElements || []).join(', ')}
+WORD COUNT CONSTRAINTS: ${scenario.constraints?.minWords || 50} to ${scenario.constraints?.maxWords || 350} words
+
+CANDIDATE'S WRITTEN RESPONSE:
+"""
+${userResponse.trim()}
+"""
+
+Provide your comprehensive 8-dimension rubric evaluation in JSON format.`;
+
+  const res = await callGeminiApi({ systemInstruction, prompt, timeoutMs: 16000 });
+
+  if (!res.success || !res.data) {
+    return null;
+  }
+
+  const d = res.data;
+  if (!d.dimensionScores || typeof d.overallScore !== 'number') {
+    return null;
+  }
+
+  // Sanitize and validate every dimension score
+  const dims = [
+    'clarity',
+    'structure',
+    'professionalTone',
+    'relevance',
+    'conciseness',
+    'grammar',
+    'problemFraming',
+    'actionability',
+  ];
+
+  const validatedScores = {};
+  for (const dim of dims) {
+    const raw = d.dimensionScores[dim] || {};
+    const num = typeof raw.score === 'number' ? Math.max(0, Math.min(10, Math.round(raw.score * 10) / 10)) : 7.0;
+    validatedScores[dim] = {
+      score: num,
+      feedback: typeof raw.feedback === 'string' && raw.feedback.trim() ? raw.feedback.trim() : 'Satisfactory demonstration.',
+    };
+  }
+
+  const overall = Math.max(0, Math.min(100, Math.round(d.overallScore)));
+
+  return {
+    overallScore: overall,
+    dimensionScores: validatedScores,
+    strengths: Array.isArray(d.strengths) && d.strengths.length > 0 ? d.strengths : ['Clear attempt at addressing scenario requirements.'],
+    improvementAreas: Array.isArray(d.improvementAreas) && d.improvementAreas.length > 0 ? d.improvementAreas : ['Consider structuring next steps more explicitly.'],
+    suggestedRewrite: typeof d.suggestedRewrite === 'string' ? d.suggestedRewrite.trim() : '',
     source: 'ai',
   };
 };

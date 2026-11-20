@@ -30,6 +30,9 @@ import JobMatchPage from './pages/student/JobMatchPage';
 import AssessmentCenterPage from './pages/student/AssessmentCenterPage';
 import TakeAssessmentPage from './pages/student/TakeAssessmentPage';
 import AssessmentResultPage from './pages/student/AssessmentResultPage';
+import CommunicationCenterPage from './pages/student/CommunicationCenterPage';
+import TakeCommunicationPage from './pages/student/TakeCommunicationPage';
+import CommunicationResultPage from './pages/student/CommunicationResultPage';
 import ReadinessReportPage from './pages/student/ReadinessReportPage';
 import ImprovementPlanPage from './pages/student/ImprovementPlanPage';
 import ProgressPage from './pages/student/ProgressPage';
@@ -100,6 +103,9 @@ export default function App() {
             <Route path="/jobs/:id/match" element={<JobMatchPage />} />
             <Route path="/assessments" element={<AssessmentCenterPage />} />
             <Route path="/assessments/attempts/:attemptId" element={<AssessmentResultPage />} />
+            <Route path="/communication" element={<CommunicationCenterPage />} />
+            <Route path="/communication/assess" element={<TakeCommunicationPage />} />
+            <Route path="/communication/attempts/:id" element={<CommunicationResultPage />} />
             <Route path="/reports/:reportId" element={<ReadinessReportPage />} />
             <Route path="/improvement-plan" element={<ImprovementPlanPage />} />
             <Route path="/progress" element={<ProgressPage />} />

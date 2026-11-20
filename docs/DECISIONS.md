@@ -175,3 +175,15 @@
   4. *Strict ₹0 Budget & Basic Safeguards*: Gemini Flash is used within free-tier limits without billing activation. Usage tracking is managed via MongoDB with graceful fallback to deterministic logic if rate-limited or offline.
   5. *Preservation of Core Formulas & RBAC*: The 85% mandatory / 15% preferred match formula and the 60% match / 40% assessment readiness formula remain locked and strictly calculated by the backend. The four diagnostic gap dimensions (Skill, Knowledge, Performance, Communication) provide itemized qualitative guidance separate from the readiness score.
 - **Rationale**: Delivers a flexible, high-utility platform suitable for college-wide demonstrations across multiple academic departments while maintaining complete reliability, deterministic grading, and zero financial cost.
+
+## ADR-020: Written Professional Communication Architecture & 8-Dimension Rubric Evaluation
+- **Date / Milestone**: Phase 5 / Slice 3
+- **Status**: Implemented & verified
+- **Decision**: Architect a dedicated, cross-domain Written Professional Communication assessment module strictly evaluated across 8 workplace communication dimensions:
+  1. *8-Dimension Rubric*: Clarity, Structure, Professional Tone, Relevance, Conciseness, Grammar & Mechanics, Problem Framing, and Actionability. Each dimension is scored 0–10 with specific diagnostic feedback; the overall communication score is normalized to 0–100.
+  2. *Strictly Non-Spoken Scope*: The module explicitly tests written corporate communication (Emails, Executive Briefs, Incident Reports, Slack/Team Updates, Memos). Does not fabricate speech recognition, pronunciation, video, or body language analysis.
+  3. *Dual-Layer Evaluation Engine*:
+     - *Primary*: Gemini Flash (`gemini-3.5-flash-lite`) evaluates responses against the structured 8-dimension JSON rubric and generates an exemplary suggested rewrite.
+     - *Autonomous Fallback*: When offline, unconfigured, or rate-limited, `evaluateResponseDeterministic` evaluates word-count bounds, greeting/sign-off structure, paragraph segmentation, polite register markers, actionability timestamps, and scenario term density. Guarantees 100% test and viva resilience at ₹0 cost.
+  4. *Preservation of Locked Formulas*: Communication scores are presented as independent qualitative diagnostic reports and do not alter the baseline Readiness Index ($0.60 \times \text{Skill Match} + 0.40 \times \text{Assessment Score}$) or Job Match ($0.85 \times \text{Mandatory} + 0.15 \times \text{Preferred}$).
+- **Rationale**: Equips students across diverse academic domains with realistic, actionable workplace communication feedback while maintaining academic integrity, deterministic viva explainability, and zero infrastructure budget.

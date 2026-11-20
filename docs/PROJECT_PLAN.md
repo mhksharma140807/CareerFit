@@ -64,17 +64,22 @@ CareerFit is a Career Readiness and Job Matching Platform designed as a college 
   - Preserved immutable question snapshots in `AssessmentAttempt` for 100% reproducible viva scoring.
   - Interactive AI Career Tutor panel (`POST /api/assessments/tutor/explain`) for deep-dive doubt resolution.
   - 4 unit tests passing (`dynamicAssessment.test.js`).
-- [ ] **Slice 3 (Next)**: Written Professional Communication Assessment (English Only).
-  - 8-dimension written response rubric & deterministic readability heuristics.
-  - Transparent limitation notices (written only, zero fake speech).
-- [ ] **Slice 4**: AI Career Tutor & Structured Practice Workflows.
+- [x] **Slice 3 (COMPLETED)**: Written Professional Communication Assessment (English Only).
+  - 8-dimension written response rubric (Clarity, Structure, Professional Tone, Relevance, Conciseness, Grammar, Problem Framing, Actionability).
+  - Curated 7-domain scenario catalog (`Technology`, `Product`, `Finance`, `Data`, `Marketing`, `HR`, `Design`) and dynamic Gemini generation (`POST /api/communication/scenarios/generate`).
+  - Deterministic NLP heuristic analyzer (`evaluateResponseDeterministic`) guaranteeing 100% offline resilience and ₹0 budget.
+  - Interactive split-view editor (`/communication/assess`) with live word/character counts, format starters, and required element checklist.
+  - Granular rubric report (`/communication/attempts/:id`) with 8-dimension progress visualizers, key strengths, improvement areas, and AI exemplar rewrites.
+  - 6 unit tests passing (`communicationAssessment.test.js`) and 5 integration tests passing (`verifySlice3Integration.mjs`).
+  - Transparent limitation notices (written workplace communication only; zero fake speech/audio).
+- [ ] **Slice 4 (Next)**: AI Career Tutor & Structured Practice Workflows.
   - 7 structured learning workflows (weak topic explanation, mock interview, JD prep).
   - Atomic ₹0 quota safeguards in MongoDB (concurrency-safe, zero Redis).
 
 ---
 
 ## Current Status
-- **Current Milestone**: Phase 5 / Slice 2 Complete $\rightarrow$ Advancing to Slice 3 (Written Professional Communication).
-- **Frontend State**: All 25 routes operational with unified BrandLogo, light/dark Obsidian Glass design system, clean Vite build (0 errors).
-- **Backend State**: Express API, deterministic 85/15 Venn matcher, 60/40 readiness index, Gemini Flash hybrid integration, adaptive testing engine, 100% offline fallback.
-- **Immediate Next Step**: Implement Slice 3 — Written Professional Communication Assessment with rubric evaluation.
+- **Current Milestone**: Phase 5 / Slice 3 Complete $\rightarrow$ Advancing to Slice 4 (AI Career Tutor & Structured Practice Workflows).
+- **Frontend State**: 28 routes operational with unified BrandLogo, light/dark Obsidian Glass design system, clean Vite build (0 errors).
+- **Backend State**: Express API, deterministic 85/15 Venn matcher, 60/40 readiness index, Gemini Flash hybrid integration, adaptive testing engine, 8-dimension written communication evaluator, 100% offline fallback.
+- **Immediate Next Step**: Implement Slice 4 — AI Career Tutor & Structured Practice Workflows with atomic ₹0 safeguards.

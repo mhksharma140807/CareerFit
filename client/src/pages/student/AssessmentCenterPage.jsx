@@ -15,6 +15,7 @@ import {
   AlertCircle,
   Zap,
   TrendingUp,
+  MessageSquare,
 } from 'lucide-react';
 
 export default function AssessmentCenterPage() {
@@ -111,6 +112,36 @@ export default function AssessmentCenterPage() {
 
       {/* AI Dynamic Adaptive Assessment Launcher */}
       <AdaptiveAssessmentLauncher />
+
+      {/* Written Professional Communication Assessment Banner */}
+      <div className="glass-card rounded-2xl p-5 border border-indigo-200/80 dark:border-indigo-900/40 bg-gradient-to-r from-indigo-50/50 via-white to-brand-50/50 dark:from-indigo-950/20 dark:via-obsidian-900 dark:to-brand-950/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-start gap-3.5">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-md">
+            <MessageSquare className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                Written Professional Communication Assessment
+              </h3>
+              <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+                Slice 3
+              </span>
+            </div>
+            <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+              Practice workplace emails, executive briefs, and conflict mediation evaluated across an 8-dimension corporate rubric.
+            </p>
+          </div>
+        </div>
+
+        <Link
+          to="/communication"
+          className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 shadow-sm transition flex items-center gap-1.5 shrink-0"
+        >
+          <span>Open Written Comms</span>
+          <ArrowRight className="w-3.5 h-3.5" />
+        </Link>
+      </div>
 
       {/* Category Tabs */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 border-b border-slate-200 dark:border-obsidian-800">

@@ -496,4 +496,48 @@ export const api = {
     });
     return await res.json();
   },
+
+  // Written Professional Communication Assessment (Slice 3)
+  async getCommunicationScenarios(filters = {}) {
+    const params = new URLSearchParams();
+    if (filters.domain) params.append('domain', filters.domain);
+    if (filters.category) params.append('category', filters.category);
+    const queryString = params.toString() ? `?${params.toString()}` : '';
+    const res = await fetch(`${API_BASE}/communication/scenarios${queryString}`, {
+      headers: authHeaders(),
+    });
+    return await res.json();
+  },
+
+  async generateCommunicationScenario(payload) {
+    const res = await fetch(`${API_BASE}/communication/scenarios/generate`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify(payload),
+    });
+    return await res.json();
+  },
+
+  async evaluateCommunicationResponse(payload) {
+    const res = await fetch(`${API_BASE}/communication/evaluate`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify(payload),
+    });
+    return await res.json();
+  },
+
+  async getMyCommunicationAttempts() {
+    const res = await fetch(`${API_BASE}/communication/attempts`, {
+      headers: authHeaders(),
+    });
+    return await res.json();
+  },
+
+  async getCommunicationAttemptById(id) {
+    const res = await fetch(`${API_BASE}/communication/attempts/${id}`, {
+      headers: authHeaders(),
+    });
+    return await res.json();
+  },
 };

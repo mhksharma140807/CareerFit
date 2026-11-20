@@ -14,6 +14,7 @@ import notificationRoutes from './routes/notificationRoutes.js';
 import progressRoutes from './routes/progressRoutes.js';
 import resumeRoutes from './routes/resumeRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
+import communicationRoutes from './routes/communicationRoutes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
@@ -63,6 +64,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/progress', progressRoutes);
 app.use('/api/resume', resumeRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/communication', communicationRoutes);
 
 // Root fallback
 app.get('/', (req, res) => {
@@ -77,6 +79,7 @@ app.get('/', (req, res) => {
       jobs: '/api/jobs',
       matching: '/api/matching',
       assessments: '/api/assessments',
+      communication: '/api/communication',
       reports: '/api/reports',
       improvementPlan: '/api/improvement-plan',
       savedJobs: '/api/saved-jobs',
