@@ -72,14 +72,20 @@ CareerFit is a Career Readiness and Job Matching Platform designed as a college 
   - Granular rubric report (`/communication/attempts/:id`) with 8-dimension progress visualizers, key strengths, improvement areas, and AI exemplar rewrites.
   - 6 unit tests passing (`communicationAssessment.test.js`) and 5 integration tests passing (`verifySlice3Integration.mjs`).
   - Transparent limitation notices (written workplace communication only; zero fake speech/audio).
-- [ ] **Slice 4 (Next)**: AI Career Tutor & Structured Practice Workflows.
-  - 7 structured learning workflows (weak topic explanation, mock interview, JD prep).
-  - Atomic ₹0 quota safeguards in MongoDB (concurrency-safe, zero Redis).
+- [x] **Slice 4 (COMPLETED)**: AI Career Tutor & Structured Practice Workflows.
+  - Multi-source context synthesis across `StudentProfile`, `AssessmentAttempt` (weak competencies, missed questions), `CommunicationAttempt` (rubric gaps), and target JD.
+  - 7 structured practice workflows: `weak_topic`, `competency_drill`, `mock_interview`, `job_interview_prep`, `mistake_remediation`, `resume_project_prep`, `communication_practice`.
+  - Interactive turn-based progression (Turn 1 $\rightarrow$ instant rubric evaluation with score, strengths, missing points, and exemplary answer $\rightarrow$ Turn 2 $\rightarrow$ Turn 3 $\rightarrow$ session completion summary).
+  - Multi-domain support (Tech, Data, Finance, Product, HR, Marketing, Design).
+  - Atomic ₹0 budget safeguards: MongoDB-based `TutorQuota` collection tracking daily request limits (35 calls/day) and atomic concurrency locking (`isLocked`, `lockedAt`), zero Redis, zero external paid dependencies.
+  - 100% deterministic offline fallback engine (`getDeterministicTutorTurn`, `evaluateTutorTurnResponseDeterministic`, `generateTutorSessionSummaryDeterministic`).
+  - Frontend client: `/tutor` (Tutor Landing Page with context pills, 1-click drill cards, custom target modal, session history), `/tutor/session/:sessionId` (turn-based interactive practice, hints accordion, real-time feedback card, completion summary with Placement Readiness action items).
+  - 5 unit tests passing (`tutorService.test.js`) and 8 end-to-end integration tests passing (`verifySlice4Integration.mjs`). Clean Vite build (1650 modules, 0 errors).
 
 ---
 
 ## Current Status
-- **Current Milestone**: Phase 5 / Slice 3 Complete $\rightarrow$ Advancing to Slice 4 (AI Career Tutor & Structured Practice Workflows).
-- **Frontend State**: 28 routes operational with unified BrandLogo, light/dark Obsidian Glass design system, clean Vite build (0 errors).
-- **Backend State**: Express API, deterministic 85/15 Venn matcher, 60/40 readiness index, Gemini Flash hybrid integration, adaptive testing engine, 8-dimension written communication evaluator, 100% offline fallback.
-- **Immediate Next Step**: Implement Slice 4 — AI Career Tutor & Structured Practice Workflows with atomic ₹0 safeguards.
+- **Current Milestone**: Phase 5 / Slice 4 Complete (AI Career Tutor & Structured Practice Workflows).
+- **Frontend State**: 30 routes operational with unified BrandLogo, light/dark Obsidian Glass design system, clean Vite build (0 errors).
+- **Backend State**: Express API, deterministic 85/15 Venn matcher, 60/40 readiness index, Gemini Flash hybrid integration, adaptive testing engine, 8-dimension written communication evaluator, 7-workflow interactive AI Tutor, 100% offline fallback.
+- **Immediate Next Step**: Ready for next user instruction or Slice 5 planning.

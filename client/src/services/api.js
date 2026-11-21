@@ -540,4 +540,44 @@ export const api = {
     });
     return await res.json();
   },
+
+  // AI Career Tutor & Structured Practice Workflows (Slice 4)
+  async getTutorContext() {
+    const res = await fetch(`${API_BASE}/tutor/context`, {
+      headers: authHeaders(),
+    });
+    return await res.json();
+  },
+
+  async startTutorSession(payload) {
+    const res = await fetch(`${API_BASE}/tutor/session/start`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify(payload),
+    });
+    return await res.json();
+  },
+
+  async submitTutorTurn(sessionId, payload) {
+    const res = await fetch(`${API_BASE}/tutor/session/${sessionId}/turn`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify(payload),
+    });
+    return await res.json();
+  },
+
+  async getMyTutorSessions() {
+    const res = await fetch(`${API_BASE}/tutor/sessions`, {
+      headers: authHeaders(),
+    });
+    return await res.json();
+  },
+
+  async getTutorSessionById(sessionId) {
+    const res = await fetch(`${API_BASE}/tutor/sessions/${sessionId}`, {
+      headers: authHeaders(),
+    });
+    return await res.json();
+  },
 };

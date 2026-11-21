@@ -88,3 +88,4 @@ const studentProfileSchema = new mongoose.Schema(
 );
 
 export const StudentProfile = mongoose.model('StudentProfile', studentProfileSchema);
+export default StudentProfile;

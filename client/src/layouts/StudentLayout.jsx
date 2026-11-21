@@ -69,6 +69,7 @@ export default function StudentLayout() {
     { label: 'Saved Jobs', path: '/saved-jobs', icon: Bookmark },
     { label: 'Assessment Center', path: '/assessments', icon: Award },
     { label: 'Written Comms', path: '/communication', icon: MessageSquare },
+    { label: 'AI Career Tutor', path: '/tutor', icon: Sparkles, highlight: true },
     { label: 'Improvement Plan', path: '/improvement-plan', icon: CheckSquare },
     { label: 'Progress History', path: '/progress', icon: TrendingUp },
     { label: 'Notifications', path: '/notifications', icon: Bell, badge: unreadCount },

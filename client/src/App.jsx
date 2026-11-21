@@ -33,6 +33,8 @@ import AssessmentResultPage from './pages/student/AssessmentResultPage';
 import CommunicationCenterPage from './pages/student/CommunicationCenterPage';
 import TakeCommunicationPage from './pages/student/TakeCommunicationPage';
 import CommunicationResultPage from './pages/student/CommunicationResultPage';
+import TutorLandingPage from './pages/student/TutorLandingPage';
+import TutorPracticePage from './pages/student/TutorPracticePage';
 import ReadinessReportPage from './pages/student/ReadinessReportPage';
 import ImprovementPlanPage from './pages/student/ImprovementPlanPage';
 import ProgressPage from './pages/student/ProgressPage';
@@ -106,6 +108,8 @@ export default function App() {
             <Route path="/communication" element={<CommunicationCenterPage />} />
             <Route path="/communication/assess" element={<TakeCommunicationPage />} />
             <Route path="/communication/attempts/:id" element={<CommunicationResultPage />} />
+            <Route path="/tutor" element={<TutorLandingPage />} />
+            <Route path="/tutor/session/:sessionId" element={<TutorPracticePage />} />
             <Route path="/reports/:reportId" element={<ReadinessReportPage />} />
             <Route path="/improvement-plan" element={<ImprovementPlanPage />} />
             <Route path="/progress" element={<ProgressPage />} />

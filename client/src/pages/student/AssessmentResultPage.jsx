@@ -282,6 +282,13 @@ export default function AssessmentResultPage() {
           </Link>
         )}
         <Link
+          to="/tutor"
+          className="px-4 py-2 bg-primary-600/20 hover:bg-primary-600/30 text-primary-300 dark:text-primary-200 text-xs font-bold rounded-xl border border-primary-500/30 transition flex items-center gap-1.5 shadow-xs"
+        >
+          <Sparkles className="w-3.5 h-3.5 text-primary-400" />
+          <span>Practice in AI Tutor</span>
+        </Link>
+        <Link
           to="/assessments"
           className="px-5 py-2 bg-gradient-to-r from-brand-600 via-electric-600 to-brand-500 hover:from-brand-500 hover:to-electric-500 text-white text-xs font-bold rounded-xl transition shadow-md hover:shadow-glow-brand flex items-center gap-1.5"
         >

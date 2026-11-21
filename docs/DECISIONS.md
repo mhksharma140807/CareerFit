@@ -187,3 +187,22 @@
      - *Autonomous Fallback*: When offline, unconfigured, or rate-limited, `evaluateResponseDeterministic` evaluates word-count bounds, greeting/sign-off structure, paragraph segmentation, polite register markers, actionability timestamps, and scenario term density. Guarantees 100% test and viva resilience at ₹0 cost.
   4. *Preservation of Locked Formulas*: Communication scores are presented as independent qualitative diagnostic reports and do not alter the baseline Readiness Index ($0.60 \times \text{Skill Match} + 0.40 \times \text{Assessment Score}$) or Job Match ($0.85 \times \text{Mandatory} + 0.15 \times \text{Preferred}$).
 - **Rationale**: Equips students across diverse academic domains with realistic, actionable workplace communication feedback while maintaining academic integrity, deterministic viva explainability, and zero infrastructure budget.
+
+## ADR-021: AI Career Tutor & Structured Practice Workflows Architecture
+- **Date / Milestone**: Phase 5 / Slice 4
+- **Status**: Implemented & verified
+- **Decision**: Architect an interactive, multi-turn AI Career Tutor with 7 structured practice workflows grounded in holistic student diagnostic context:
+  1. *Context Synthesis*: Aggregates student profile skills, target role, diagnosed weak competencies (<70% accuracy from `AssessmentAttempt`), historical assessment errors, and written communication gaps from `CommunicationAttempt`.
+  2. *7 Practice Workflows*:
+     - `weak_topic`: Socratic breakdown and scenario testing for diagnosed weak competencies.
+     - `competency_drill`: Fast-paced domain/technical scenario drill.
+     - `mock_interview`: Realistic interview questions (technical, situational, behavioral) with follow-up probing.
+     - `job_interview_prep`: Role-specific interview prep aligned with custom role or pasted JD.
+     - `mistake_remediation`: Re-testing concepts missed in prior assessment questions.
+     - `resume_project_prep`: Interrogation on resume project architecture, trade-offs, and design choices.
+     - `communication_practice`: Executive updates, cross-functional dependencies, and escalation scenarios.
+  3. *Turn-Based Interactive Progression*: Exactly ONE question per turn. Student submits an answer $\rightarrow$ immediate substantive feedback (score 0-100, strengths, missing points, mentor feedback, exemplary answer) $\rightarrow$ next turn $\rightarrow$ final completion summary (overall score, aggregated strengths, improvement priorities, and concrete placement readiness action items).
+  4. *Atomic ₹0 Budget Rate Limiter & Concurrency Guard*: Track daily usage via MongoDB `TutorQuota` collection (max 35 requests/day per student) with atomic concurrency locking (`isLocked`, `lockedAt` with 25-second auto-expiration). Rejects concurrent turns with HTTP 429 without requiring external Redis or paid infrastructure.
+  5. *100% Offline Deterministic Fallback*: `getDeterministicTutorTurn`, `evaluateTutorTurnResponseDeterministic`, and `generateTutorSessionSummaryDeterministic` ensure flawless local tests, offline viva demonstrations, and zero dependence on live API keys.
+  6. *Preservation of Locked Formulas*: Practice session scores serve as formative coaching diagnostics; baseline formulas ($0.60 \times \text{Skill Match} + 0.40 \times \text{Assessment Score}$ and $0.85 \times \text{Mandatory} + 0.15 \times \text{Preferred}$) remain strictly preserved.
+- **Rationale**: Gives students authentic, personalized placement coaching without requiring generic open-ended chatbots or expensive AI subscriptions, ensuring high academic demonstration quality and deterministic reliability for viva defense.

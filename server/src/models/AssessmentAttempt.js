@@ -70,3 +70,4 @@ const assessmentAttemptSchema = new mongoose.Schema(
 );
 
 export const AssessmentAttempt = mongoose.model('AssessmentAttempt', assessmentAttemptSchema);
+export default AssessmentAttempt;

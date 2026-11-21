@@ -655,5 +655,230 @@ Provide your comprehensive 8-dimension rubric evaluation in JSON format.`;
   };
 };
 
+/**
+ * Generates an interactive practice turn question using Gemini Flash
+ */
+export const generateTutorTurnWithGemini = async ({
+  workflow,
+  roleTitle,
+  domain,
+  targetTopic,
+  customJd,
+  contextSnapshot = {},
+  turnsHistory = [],
+  turnIndex = 0,
+  maxTurns = 3,
+}) => {
+  if (!isGeminiConfigured()) {
+    return null;
+  }
+
+  const systemInstruction = `You are CareerFit's expert AI Career Coach and Senior Interviewer.
+You are conducting an interactive, turn-based coaching session with a college candidate.
+Session workflow: ${workflow}.
+Career domain: ${domain || 'General'}.
+Target role: ${roleTitle || 'Professional'}.
+${targetTopic ? `Target topic/competency: ${targetTopic}.` : ''}
+
+Session progress: Turn ${turnIndex + 1} of ${maxTurns}.
+Previous turns in this session:
+${
+  turnsHistory.length > 0
+    ? turnsHistory
+        .map(
+          (t, i) =>
+            `Turn ${i + 1} Question: "${t.questionText}"\nCandidate Answer: "${t.userResponse}"\nEvaluation Score: ${t.evaluation?.score || 'N/A'}`
+        )
+        .join('\n\n')
+    : 'None (this is the first turn).'
+}
+
+Candidate Diagnostic Context:
+- Skills: ${(contextSnapshot.skills || []).join(', ') || 'General entry-level skills'}
+- Weak Competencies: ${(contextSnapshot.weakCompetencies || []).join(', ') || 'None flagged'}
+- Target JD / Role Focus: ${customJd ? customJd.slice(0, 300) : roleTitle}
+- Candidate Projects: ${(contextSnapshot.projects || []).map((p) => p.name || p).join('; ') || 'Standard academic coursework'}
+
+Instructions:
+1. Generate ONE single targeted, thought-provoking question/prompt for Turn ${turnIndex + 1}.
+2. For 'weak_topic': Test the candidate's understanding of foundational principles or real-world application of ${targetTopic || 'their weak competency'}.
+3. For 'competency_drill': Provide a realistic technical or domain problem to solve or explain.
+4. For 'mock_interview': Ask a realistic interview question suited for ${roleTitle}.
+5. For 'job_interview_prep': Probe a specific requirement or scenario directly from the role or JD.
+6. For 'mistake_remediation': Pose a scenario question that re-tests the concept they previously struggled with.
+7. For 'resume_project_prep': Ask an in-depth behavioral/technical question about their project implementation, architectural trade-offs, or challenges.
+8. For 'communication_practice': Present a workplace scenario requiring a structured, professional reply.
+9. Do NOT ask multiple unrelated questions at once. Keep the prompt focused on one core challenge.
+10. If there are previous turns, acknowledge progression naturally (e.g., dive deeper into edge cases or a complementary angle).
+
+Return a strict JSON object with:
+{
+  "questionText": "Clear, concise, direct question (2-4 sentences)",
+  "context": "Brief background or situational setting (1-2 sentences)",
+  "expectedKeyPoints": [
+    "Key point 1 that a high-scoring candidate should mention",
+    "Key point 2 that should be addressed",
+    "Key point 3 regarding trade-offs, best practices, or methodology"
+  ]
+}`;
+
+  const prompt = `Generate Turn ${turnIndex + 1} of ${maxTurns} for workflow "${workflow}" targeting "${roleTitle}".`;
+
+  const res = await callGeminiApi({ systemInstruction, prompt, timeoutMs: 14000 });
+  if (!res.success || !res.data) {
+    return null;
+  }
+
+  const d = res.data;
+  if (!d.questionText || typeof d.questionText !== 'string') {
+    return null;
+  }
+
+  return {
+    questionText: d.questionText.trim(),
+    context: typeof d.context === 'string' ? d.context.trim() : '',
+    expectedKeyPoints: Array.isArray(d.expectedKeyPoints) && d.expectedKeyPoints.length > 0
+      ? d.expectedKeyPoints.map((k) => String(k).trim())
+      : ['Sound technical/domain reasoning', 'Clear practical justification'],
+  };
+};
+
+/**
+ * Evaluates a candidate's turn response using Gemini Flash
+ */
+export const evaluateTutorTurnResponseWithGemini = async ({
+  workflow,
+  roleTitle,
+  domain,
+  targetTopic,
+  questionText,
+  context,
+  expectedKeyPoints = [],
+  userResponse,
+}) => {
+  if (!isGeminiConfigured() || !userResponse || typeof userResponse !== 'string') {
+    return null;
+  }
+
+  const systemInstruction = `You are a supportive yet rigorous senior industry interviewer and placement coach at CareerFit.
+Evaluate the candidate's response to the practice question.
+
+Role: ${roleTitle} (${domain || 'General'})
+Workflow: ${workflow}
+${targetTopic ? `Topic: ${targetTopic}` : ''}
+
+Question Asked: "${questionText}"
+${context ? `Question Context: "${context}"` : ''}
+Expected Key Points:
+${expectedKeyPoints.map((k, i) => `${i + 1}. ${k}`).join('\n')}
+
+Evaluation Guidelines:
+1. Score from 0 to 100 based on accuracy, depth, relevance, and clarity.
+   - 85-100: Exceptional, placement-ready answer with strong technical/commercial depth.
+   - 70-84: Good, solid response with minor omissions or slightly vague points.
+   - 50-69: Partially correct or superficial; lacks depth or missed essential concepts.
+   - < 50: Inaccurate, irrelevant, or minimal effort.
+2. Strengths: 2 concise bullet points highlighting what the candidate did well.
+3. Missing Points: 2 concise bullet points identifying what was absent, vague, or could be sharpened.
+4. Feedback: 2-3 sentences of constructive mentoring advice.
+5. Exemplary Answer: A concise, model answer demonstrating how a top candidate would answer this in an actual interview or workplace setting.
+
+Return a strict JSON object:
+{
+  "score": number (0-100),
+  "strengths": ["string", "string"],
+  "missingPoints": ["string", "string"],
+  "feedback": "string",
+  "exemplaryAnswer": "string"
+}`;
+
+  const prompt = `CANDIDATE RESPONSE:
+"""
+${userResponse.trim()}
+"""
+
+Evaluate this candidate response against the question and expected key points.`;
+
+  const res = await callGeminiApi({ systemInstruction, prompt, timeoutMs: 16000 });
+  if (!res.success || !res.data) {
+    return null;
+  }
+
+  const d = res.data;
+  const score = typeof d.score === 'number' ? Math.max(0, Math.min(100, Math.round(d.score))) : 70;
+
+  return {
+    score,
+    strengths: Array.isArray(d.strengths) && d.strengths.length > 0 ? d.strengths : ['Demonstrated relevant domain awareness.'],
+    missingPoints: Array.isArray(d.missingPoints) && d.missingPoints.length > 0 ? d.missingPoints : ['Could include more quantitative or operational specifics.'],
+    feedback: typeof d.feedback === 'string' && d.feedback.trim() ? d.feedback.trim() : 'Solid attempt. Continue refining your structure and depth.',
+    exemplaryAnswer: typeof d.exemplaryAnswer === 'string' ? d.exemplaryAnswer.trim() : '',
+    source: 'ai',
+  };
+};
+
+/**
+ * Generates an end-of-session summary for the candidate
+ */
+export const generateTutorSessionSummaryWithGemini = async ({
+  workflow,
+  roleTitle,
+  domain,
+  turns = [],
+  targetTopic,
+}) => {
+  if (!isGeminiConfigured() || turns.length === 0) {
+    return null;
+  }
+
+  const systemInstruction = `You are a CareerFit executive placement advisor.
+Synthesize the results of a ${turns.length}-turn practice session for a student targeting "${roleTitle}".
+Session workflow: ${workflow}.
+${targetTopic ? `Topic: ${targetTopic}` : ''}
+
+Turns Summary:
+${turns
+  .map(
+    (t, i) =>
+      `Turn ${i + 1}:
+Q: ${t.questionText}
+Candidate: ${t.userResponse}
+Score: ${t.evaluation?.score || 'N/A'}/100
+Strengths: ${(t.evaluation?.strengths || []).join('; ')}
+Missing: ${(t.evaluation?.missingPoints || []).join('; ')}`
+  )
+  .join('\n\n')}
+
+Provide an overall assessment:
+1. overallScore (0-100 average of turn scores).
+2. keyStrengths: 2-3 high-level patterns of strength shown across turns.
+3. areasToImprove: 2-3 persistent skill or delivery gaps to address before placements.
+4. remediationAdvice: 2-3 sentences of clear, practical next steps to boost their Placement Readiness Index.
+
+Return strict JSON:
+{
+  "overallScore": number (0-100),
+  "keyStrengths": ["string", "string"],
+  "areasToImprove": ["string", "string"],
+  "remediationAdvice": "string"
+}`;
+
+  const prompt = `Synthesize the overall performance for this ${workflow} practice session.`;
+
+  const res = await callGeminiApi({ systemInstruction, prompt, timeoutMs: 14000 });
+  if (!res.success || !res.data) {
+    return null;
+  }
+
+  const d = res.data;
+  return {
+    overallScore: typeof d.overallScore === 'number' ? Math.max(0, Math.min(100, Math.round(d.overallScore))) : Math.round(turns.reduce((acc, t) => acc + (t.evaluation?.score || 70), 0) / turns.length),
+    keyStrengths: Array.isArray(d.keyStrengths) && d.keyStrengths.length > 0 ? d.keyStrengths : ['Consistent engagement across all turns.'],
+    areasToImprove: Array.isArray(d.areasToImprove) && d.areasToImprove.length > 0 ? d.areasToImprove : ['Deepen edge-case handling and technical articulation.'],
+    remediationAdvice: typeof d.remediationAdvice === 'string' && d.remediationAdvice.trim() ? d.remediationAdvice.trim() : 'Review key concepts and complete an assessment to verify progress.',
+  };
+};
+
+
 
 
