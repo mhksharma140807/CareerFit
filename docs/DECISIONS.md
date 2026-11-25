@@ -206,3 +206,14 @@
   5. *100% Offline Deterministic Fallback*: `getDeterministicTutorTurn`, `evaluateTutorTurnResponseDeterministic`, and `generateTutorSessionSummaryDeterministic` ensure flawless local tests, offline viva demonstrations, and zero dependence on live API keys.
   6. *Preservation of Locked Formulas*: Practice session scores serve as formative coaching diagnostics; baseline formulas ($0.60 \times \text{Skill Match} + 0.40 \times \text{Assessment Score}$ and $0.85 \times \text{Mandatory} + 0.15 \times \text{Preferred}$) remain strictly preserved.
 - **Rationale**: Gives students authentic, personalized placement coaching without requiring generic open-ended chatbots or expensive AI subscriptions, ensuring high academic demonstration quality and deterministic reliability for viva defense.
+
+## ADR-022: Unified Career Readiness Intelligence, Evidence Confidence & Longitudinal Tracking
+- **Date / Milestone**: Phase 5 / Slice 5
+- **Status**: Implemented & verified
+- **Decision**: Unify candidate readiness diagnostics across existing CareerFit collections (`StudentProfile`, `Job`, `ReadinessReport`, `AssessmentAttempt`, `CommunicationAttempt`, `TutorSession`) in `readinessIntelligenceService.js` without duplicating database models or altering locked formulas:
+  1. *Locked Formulas & Honest Insufficient-Data States*: Preserves $0.85 \times \text{Mandatory} + 0.15 \times \text{Preferred}$ (Job Match) and $0.60 \times \text{Skill Match} + 0.40 \times \text{Assessment Score}$ (Readiness Index). When either target role context or assessment attempts are missing, `readinessIndex` remains `null` with an explicit `insufficient_role_context` or `insufficient_assessment_data` status rather than fabricating a score.
+  2. *Three-Tier Evidence Confidence System*: Classifies each competency as `VERIFIED` (backed by scored assessment or communication attempt), `INFERRED` (present in profile skills, projects, or resume text only), or `UNASSESSED` (no evidence yet). Missing resume skills are never labeled as demonstrated weaknesses.
+  3. *Four Diagnostic Dimensions*: Reports `Skill Gap`, `Knowledge Gap`, `Performance Gap`, and `Communication & Professional Gap` as qualitative diagnostic categories separate from the 60/40 readiness formula.
+  4. *Longitudinal Comparability Guards*: Enhances `GET /api/progress` with communication, AI Tutor, competency accuracy deltas, and improvement-plan tracking while suppressing misleading same-role readiness deltas and surfacing warnings whenever target roles or assessment structures change.
+  5. *Optional AI Narrative*: Uses Gemini Flash (`generateReadinessNarrativeWithGemini`) strictly to summarize already-computed deterministic metrics, with instant deterministic fallback when unconfigured or rate-limited.
+- **Rationale**: Delivers transparent, evidence-backed career readiness intelligence across arbitrary domains at ₹0 cost while maintaining strict academic integrity and backward compatibility.

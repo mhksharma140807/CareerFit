@@ -580,4 +580,27 @@ export const api = {
     });
     return await res.json();
   },
+
+  // Unified Career Readiness Intelligence (Slice 5)
+  async getReadinessIntelligence(filters = {}) {
+    const params = new URLSearchParams();
+    if (filters.jobId) params.append('jobId', filters.jobId);
+    if (filters.customRole) params.append('customRole', filters.customRole);
+    if (filters.customDomain) params.append('customDomain', filters.customDomain);
+    if (filters.includeAi !== undefined) params.append('includeAi', String(filters.includeAi));
+    const qs = params.toString() ? `?${params.toString()}` : '';
+    const res = await fetch(`${API_BASE}/reports/intelligence${qs}`, {
+      headers: authHeaders(),
+    });
+    return await res.json();
+  },
+
+  async evaluateCustomReadinessIntelligence(payload) {
+    const res = await fetch(`${API_BASE}/reports/intelligence`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify(payload),
+    });
+    return await res.json();
+  },
 };

@@ -5,6 +5,7 @@ import { AssessmentAttempt } from '../models/AssessmentAttempt.js';
 import { evaluateSkillMatch } from '../utils/skillMatcher.js';
 import { triggerNotification } from '../utils/notificationHelper.js';
 import { generatePersonalizedAdviceWithGemini, isGeminiConfigured } from '../services/aiService.js';
+import { getUnifiedReadinessIntelligence } from '../services/readinessIntelligenceService.js';
 
 export const generateReport = async (req, res, next) => {
   try {
@@ -304,6 +305,39 @@ export const getLatestReport = async (req, res, next) => {
     res.json({
       success: true,
       data: report || null,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * GET / POST /api/reports/intelligence
+ * Unified Career Readiness Intelligence synthesis strictly bound to req.user._id
+ */
+export const getReadinessIntelligence = async (req, res, next) => {
+  try {
+    const source = req.method === 'POST' ? req.body : req.query;
+    const {
+      jobId = null,
+      customRole = '',
+      customDomain = '',
+      customJdText = '',
+      includeAi = 'true',
+    } = source || {};
+
+    const intelligence = await getUnifiedReadinessIntelligence({
+      userId: req.user._id,
+      jobId: jobId || null,
+      customRole: String(customRole || ''),
+      customDomain: String(customDomain || ''),
+      customJdText: String(customJdText || ''),
+      includeAi: includeAi !== 'false' && includeAi !== false,
+    });
+
+    res.json({
+      success: true,
+      data: intelligence,
     });
   } catch (error) {
     next(error);

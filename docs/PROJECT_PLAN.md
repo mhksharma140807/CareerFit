@@ -81,11 +81,20 @@ CareerFit is a Career Readiness and Job Matching Platform designed as a college 
   - 100% deterministic offline fallback engine (`getDeterministicTutorTurn`, `evaluateTutorTurnResponseDeterministic`, `generateTutorSessionSummaryDeterministic`).
   - Frontend client: `/tutor` (Tutor Landing Page with context pills, 1-click drill cards, custom target modal, session history), `/tutor/session/:sessionId` (turn-based interactive practice, hints accordion, real-time feedback card, completion summary with Placement Readiness action items).
   - 5 unit tests passing (`tutorService.test.js`) and 8 end-to-end integration tests passing (`verifySlice4Integration.mjs`). Clean Vite build (1650 modules, 0 errors).
+- [x] **Slice 5 (COMPLETED)**: Unified Career Readiness Intelligence & Progress Tracking.
+  - Unified synthesis engine (`server/src/services/readinessIntelligenceService.js`) combining `StudentProfile`, `Job`, `ReadinessReport`, `AssessmentAttempt`, `CommunicationAttempt`, and `TutorSession` without duplicating collections.
+  - Preserved locked formulas (`85/15` skill match and `60/40` readiness index) with explicit insufficient-evidence states when target role or assessment data is missing.
+  - Four Diagnostic Dimensions (`Skill Gap`, `Knowledge Gap`, `Performance Gap`, `Communication & Professional Gap`) strictly separated from the 60/40 readiness formula.
+  - Evidence-based confidence classification (`VERIFIED`, `INFERRED`, `UNASSESSED`) distinguishing lack of evidence from demonstrated weakness, with sources and timestamps.
+  - Arbitrary domain & custom JD benchmarking via `GET/POST /api/reports/intelligence`, plus longitudinal tracking & comparability guards in `GET /api/progress`.
+  - Optional Gemini narrative summary (`generateReadinessNarrativeWithGemini`) with deterministic offline fallback.
+  - Enhanced `/dashboard` (`DashboardPage.jsx`) and `/progress` (`ProgressPage.jsx`) with role/JD switcher, confidence filters, previous-vs-current comparisons, and prioritized next actions.
+  - 6 unit tests passing (`readinessIntelligence.test.js`) and 4 integration tests passing (`verifySlice5Integration.mjs`).
 
 ---
 
 ## Current Status
-- **Current Milestone**: Phase 5 / Slice 4 Complete (AI Career Tutor & Structured Practice Workflows).
+- **Current Milestone**: Phase 5 / Slice 5 Complete (Unified Career Readiness Intelligence & Progress Tracking).
 - **Frontend State**: 30 routes operational with unified BrandLogo, light/dark Obsidian Glass design system, clean Vite build (0 errors).
-- **Backend State**: Express API, deterministic 85/15 Venn matcher, 60/40 readiness index, Gemini Flash hybrid integration, adaptive testing engine, 8-dimension written communication evaluator, 7-workflow interactive AI Tutor, 100% offline fallback.
-- **Immediate Next Step**: Ready for next user instruction or Slice 5 planning.
+- **Backend State**: Express API, deterministic 85/15 Venn matcher, 60/40 readiness index, Gemini Flash hybrid integration, adaptive testing engine, 8-dimension written communication evaluator, 7-workflow interactive AI Tutor, unified readiness intelligence & longitudinal progress tracking, 100% offline fallback.
+- **Immediate Next Step**: Ready for user review / viva demonstration.

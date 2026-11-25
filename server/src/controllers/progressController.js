@@ -1,16 +1,28 @@
 import { AssessmentAttempt } from '../models/AssessmentAttempt.js';
 import { ReadinessReport } from '../models/ReadinessReport.js';
+import { StudentProfile } from '../models/StudentProfile.js';
+import CommunicationAttempt from '../models/CommunicationAttempt.js';
+import TutorSession from '../models/TutorSession.js';
+import { buildHistoricalProgress } from '../services/readinessIntelligenceService.js';
 
 export const getProgress = async (req, res, next) => {
   try {
-    const attempts = await AssessmentAttempt.find({ userId: req.user._id })
-      .populate('assessmentId', 'title category skillTag difficulty')
-      .sort({ createdAt: 1 }) // Chronological for timeline
-      .lean();
-
-    const reports = await ReadinessReport.find({ userId: req.user._id })
-      .sort({ createdAt: 1 }) // Chronological
-      .lean();
+    const [attempts, reports, communicationAttempts, tutorSessions, profile] = await Promise.all([
+      AssessmentAttempt.find({ userId: req.user._id })
+        .populate('assessmentId', 'title category skillTag difficulty roleTitle domain')
+        .sort({ createdAt: 1 }) // Chronological for timeline
+        .lean(),
+      ReadinessReport.find({ userId: req.user._id })
+        .sort({ createdAt: 1 }) // Chronological
+        .lean(),
+      CommunicationAttempt.find({ userId: req.user._id })
+        .sort({ createdAt: 1 })
+        .lean(),
+      TutorSession.find({ userId: req.user._id })
+        .sort({ createdAt: 1 })
+        .lean(),
+      StudentProfile.findOne({ userId: req.user._id }).lean(),
+    ]);
 
     // Calculate score trends
     const timelineData = attempts.map((att) => ({
@@ -67,6 +79,14 @@ export const getProgress = async (req, res, next) => {
       }
     });
 
+    const historical = buildHistoricalProgress({
+      attempts,
+      reports,
+      communicationAttempts,
+      tutorSessions,
+      profile: profile || {},
+    });
+
     const summaryData = {
       totalAttempts,
       passedCount,
@@ -79,6 +99,9 @@ export const getProgress = async (req, res, next) => {
       reportsGenerated: reports.length,
       totalReports: reports.length,
       latestReadinessIndex: reports.length > 0 ? reports[reports.length - 1].readinessIndex : null,
+      communicationCount: communicationAttempts.length,
+      tutorCompletedCount: historical.tutorActivity.completedSessions,
+      improvementProgressPercentage: historical.improvementPlan.progressPercentage,
     };
 
     res.json({
@@ -92,6 +115,8 @@ export const getProgress = async (req, res, next) => {
           aptitude: { count: aptitudeAttempts.length, average: aptitudeAvg },
           technical: { count: technicalAttempts.length, average: technicalAvg },
         },
+        // Slice 5 Longitudinal Extensions
+        ...historical,
       },
     });
   } catch (error) {

@@ -879,6 +879,73 @@ Return strict JSON:
   };
 };
 
+/**
+ * Generates an optional, human-friendly diagnostic narrative from already-computed
+ * deterministic readiness metrics. Never invents scores, verified skills, or history.
+ */
+export const generateReadinessNarrativeWithGemini = async ({
+  roleTitle,
+  domain,
+  readinessStatus,
+  readinessIndex,
+  matchPercentage,
+  assessmentScore,
+  topGaps = [],
+  unassessedCompetencies = [],
+  performanceDelta = null,
+}) => {
+  if (!isGeminiConfigured()) {
+    return null;
+  }
+
+  const systemInstruction = `You are CareerFit's Career Readiness Intelligence Advisor.
+Your job is ONLY to summarize already-computed deterministic metrics in clear, encouraging, accurate language.
+STRICT RULES:
+1. Never invent scores, verified skills, assessment results, or historical progress.
+2. Clearly distinguish between demonstrated weaknesses and unassessed competencies (lack of evidence).
+3. Keep each field concise (2-3 sentences).
+
+Return strict JSON matching this schema:
+{
+  "executiveSummary": "string",
+  "roleRelevanceNote": "string",
+  "performanceChangeExplanation": "string"
+}`;
+
+  const prompt = `Target Role: ${roleTitle || 'Target Role'} (${domain || 'General'})
+Readiness Status: ${readinessStatus}
+Readiness Index: ${readinessIndex !== null ? `${readinessIndex}%` : 'Unavailable (insufficient evidence)'}
+Skill Match: ${matchPercentage !== null ? `${matchPercentage}%` : 'Unavailable'}
+Assessment Score: ${assessmentScore !== null ? `${assessmentScore}%` : 'Unavailable (no completed assessments)'}
+Demonstrated Gaps: ${topGaps.length > 0 ? topGaps.join(', ') : 'None flagged'}
+Unassessed Competencies (insufficient evidence): ${unassessedCompetencies.length > 0 ? unassessedCompetencies.join(', ') : 'None'}
+Recent Assessment Score Change: ${performanceDelta !== null ? `${performanceDelta >= 0 ? '+' : ''}${performanceDelta}%` : 'Insufficient history for comparison'}`;
+
+  const res = await callGeminiApi({ systemInstruction, prompt, timeoutMs: 12000 });
+  if (!res.success || !res.data) {
+    return null;
+  }
+
+  const d = res.data;
+  if (typeof d.executiveSummary !== 'string' || !d.executiveSummary.trim()) {
+    return null;
+  }
+
+  return {
+    executiveSummary: d.executiveSummary.trim(),
+    roleRelevanceNote:
+      typeof d.roleRelevanceNote === 'string' && d.roleRelevanceNote.trim()
+        ? d.roleRelevanceNote.trim()
+        : `These competencies reflect core expectations for ${roleTitle || 'your target role'}.`,
+    performanceChangeExplanation:
+      typeof d.performanceChangeExplanation === 'string' && d.performanceChangeExplanation.trim()
+        ? d.performanceChangeExplanation.trim()
+        : 'Continue taking periodic assessments and practice drills to build measurable trend data.',
+    source: 'ai',
+  };
+};
+
+
 
 
 
